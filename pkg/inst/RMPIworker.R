@@ -48,11 +48,15 @@ local({
   }
   doMPI:::sinkWorkerOutput(outfile)
 
-  if (verbose)
-    cat("starting MPI worker\n")
+  procname <- mpi.get.processor.name()
+  nodename <- Sys.info()[['nodename']]
+
+  if (verbose) {
+    cat("Starting MPI worker\n")
+    cat("Worker processor name: %s; nodename: %s\n", procname, nodename)
+  }
 
   # get the nodename of all the workers
-  nodename <- Sys.info()[['nodename']]
   nodelist <- list()
   nodelist[[as.character(workerid)]] <- nodename
   nodelist <- mpi.allgather.Robj(nodelist, comm)
@@ -77,9 +81,10 @@ local({
   # compute the number of cores available to us
   # this will determine if we will ever use mclapply
   cores <- numcores %/% numprocs + (id < numcores %% numprocs)
-  if (verbose)
+  if (verbose) {
     cat(sprintf('numprocs: %d, id: %d, numcores: %d, cores: %d\n',
                 numprocs, id, numcores, cores))
+  }
 
   # this is where all the work is done
   cl <- doMPI:::openMPIcluster(workerid)
