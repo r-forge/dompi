@@ -48,7 +48,28 @@ startMPIcluster <- function(count, verbose=FALSE, workdir=getwd(),
               sprintf("WORKDIR=%s", workdir),
               sprintf("INCLUDEMASTER=%s", includemaster),
               sprintf("VERBOSE=%s", verbose))
-    if (verbose) print(args)
+
+    procname <- mpi.get.processor.name()
+    nodename <- Sys.info()[['nodename']]
+    universesize <- mpi.universe.size()
+
+    if (verbose) {
+      cat(sprintf("Master processor name: %s; nodename: %s\n", procname, nodename))
+      cat(sprintf("Size of MPI universe: %d\n", universesize))
+    }
+
+    if (missing(count)) {
+      if (universesize > 1) {
+        count <- universesize - 1
+      } else {
+        stop('count must be specified in this case')
+      }
+    }
+
+    if (verbose) {
+      cat(sprintf("Spawning %d workers using the command:\n", count))
+      cat(sprintf("  %s %s\n", rscript, paste(args, collapse=" ")))
+    }
     count <- mpi.comm.spawn(slave=rscript, slavearg=args,
                             nslaves=count, intercomm=intercomm)
 
@@ -61,7 +82,8 @@ startMPIcluster <- function(count, verbose=FALSE, workdir=getwd(),
 
     # participate in making the nodelist, but the master doesn't use it
     # the workers use it for deciding how many cores to use
-    nodelist <- list('0'=Sys.info()[['nodename']])
+    nodelist <- list('0'=nodename)
+    ## nodelist <- list('0'=procname)
     nodelist <- mpi.allgather.Robj(nodelist, comm)
 
     cl <- list(workerCount=count)
