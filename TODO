@@ -1,0 +1,38 @@
+TODO:
+
+- Document the doMPI specific options.
+
+- Need a vignette.  It should include a fair bit of information on
+  running doMPI scripts using orterun, for example.
+
+- Need to benchmark doMPI against doSNOW.  I'd like to know if
+  broadcasting is helping.
+
+- Need more examples.  bootMPI.R is becoming more of a benchmark.
+
+- Need a test suite.
+
+
+General issues:
+
+- Should we continue to support nws?
+
+- Would it be useful to support any other message passing API?
+
+- Should the message passing operations be implemented via methods?
+
+- Snow supports many more options in starting the workers.
+  doMPI assumes an homogeneous installation and uses mpi.
+  What other options and mechanisms are important?
+
+
+Rmpi related issues:
+
+- Should mpi.get.processor.name be used rather than Sys.info()[['nodename']] to
+  determine a node id?
+
+- Is mpi.universe.size useful for determining the default value of
+  "count" in startMPIcluster?  Is it correct to subtract one from it?
+
+- Can mpi.setup.rngstream and mpi.setup.sprng be used to support
+  distributed random number generation?
