@@ -36,20 +36,21 @@ echo '<?xml version="1.0" encoding="UTF-8"?>';
 <h1>Welcome to the doMPI project</h1>
 <p>
 The 'doMPI' package provides a parallel backend for the 'foreach' package.
-It is similar to the 'doSNOW' package, but uses Rmpi directly.
-This allows it to do much more, but it is a more complicated package.
+It is similar to the 'doSNOW' package, but uses 'Rmpi' directly.
+This allows it to do more, and execute more efficiently.
 </p>
 
 <h2>Features of the doMPI backend</h2>
 <p>
 <ul>
-  <li>Tasks arguments are fetched when they are submitted a cluster worker.</li>
-  <li>Results are processed as they are returned by the cluster workers.</li>
+  <li>Tasks arguments are fetched when they are submitted to a cluster worker.</li>
+  <li>Results are processed by the master as they are returned by the cluster workers.</li>
   <li>A chunkSize option is supported to increase task granularity for
       better performance.</li>
-  <li>If chunkSize is used and a cluster worker has multiple cores, the mclapply
-      function from the multicore package is used to execute the tasks in parallel.</li>
-  <li>Data that is needed for all tasks in broadcast to the cluster workers.</li>
+  <li>If chunkSize is used, and a cluster worker has multiple cores, the mclapply
+      function from the 'multicore' package is used to execute the tasks in parallel.
+      This enables hybrid parallelism.</li>
+  <li>Data that is common to all tasks is broadcast to the cluster workers.</li>
 </ul>
 </p>
 
