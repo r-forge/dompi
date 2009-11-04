@@ -1,11 +1,13 @@
 library(doMPI)
 
 usenws <- as.logical(Sys.getenv('USENWS', 'FALSE'))
+verbose <- as.logical(Sys.getenv('VERBOSE', 'FALSE'))
 im <- as.logical(Sys.getenv('INCLUDEMASTER', 'TRUE'))
+
 cl <- if (usenws) {
-  startNWScluster(workerCount=2, includemaster=im)
+  startNWScluster(workerCount=2, verbose=verbose, includemaster=im)
 } else {
-  startMPIcluster(count=2, includemaster=im)
+  startMPIcluster(count=2, verbose=verbose, includemaster=im)
 }
 registerDoMPI(cl)
 
