@@ -46,7 +46,7 @@ local({
   } else {
     '/dev/null'
   }
-  sinkWorkerOutput(outfile)
+  doMPI:::sinkWorkerOutput(outfile)
 
   if (verbose)
     cat("starting MPI worker\n")
