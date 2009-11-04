@@ -1,5 +1,4 @@
-export(registerDoMPI, startNWScluster, startMPIcluster, clusterSize, closeCluster,
-       sinkWorkerOutput)
+export(registerDoMPI, startNWScluster, startMPIcluster, clusterSize, closeCluster)
 S3method(clusterSize, nwscluster)
 S3method(closeCluster, nwscluster)
 S3method(clusterSize, mpicluster)
