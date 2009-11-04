@@ -33,17 +33,25 @@ echo '<?xml version="1.0" encoding="UTF-8"?>';
 <!-- get project title  -->
 <!-- own website starts here, the following may be changed as you like -->
 
-<?php if ($handle=fopen('http://'.$domain.'/export/projtitl.php?group_name='.$group_name,'r')){
-$contents = '';
-while (!feof($handle)) {
-	$contents .= fread($handle, 8192);
-}
-fclose($handle);
-echo $contents; } ?>
+<h1>Welcome to the doMPI project</h1>
+<p>
+The 'doMPI' package provides a parallel backend for the 'foreach' package.
+It is similar to the 'doSNOW' package, but uses Rmpi directly.
+This allows it to do much more, but it is a more complicated package.
+</p>
 
-<!-- end of project description -->
-
-<p> No content added. </p>
+<h2>Features of the doMPI backend</h2>
+<p>
+<ul>
+  <li>Tasks arguments are fetched when they are submitted a cluster worker.</li>
+  <li>Results are processed as they are returned by the cluster workers.</li>
+  <li>A chunkSize option is supported to increase task granularity for
+      better performance.</li>
+  <li>If chunkSize is used and a cluster worker has multiple cores, the mclapply
+      function from the multicore package is used to execute the tasks in parallel.</li>
+  <li>Data that is needed for all tasks in broadcast to the cluster workers.</li>
+</ul>
+</p>
 
 <p> The <strong>project summary page</strong> you can find <a href="http://<?php echo $domain; ?>/projects/<?php echo $group_name; ?>/"><strong>here</strong></a>. </p>
 
