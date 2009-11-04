@@ -1,4 +1,4 @@
-\name{workers}
+\name{cluster}
 \alias{clusterSize}
 \alias{closeCluster}
 \title{Cluster Management Functions}
