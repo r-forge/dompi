@@ -51,6 +51,8 @@ This allows it to do more, and execute more efficiently.
       function from the 'multicore' package is used to execute the tasks in parallel.
       This enables hybrid parallelism.</li>
   <li>Data that is common to all tasks is broadcast to the cluster workers.</li>
+  <li>Backend-specific options for initializing and finalizing the worker execution
+      environments.</li>
 </ul>
 </p>
 
