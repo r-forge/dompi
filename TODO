@@ -15,6 +15,11 @@ TODO:
 
 General issues:
 
+- Should we provide a backend-independent function for the worker
+  to determine information about themselves, such as its rank, node name
+  and verbosity level?  What about the number of other workers started
+  on this node?
+
 - Should we continue to support nws?
 
 - Would it be useful to support any other message passing API?
