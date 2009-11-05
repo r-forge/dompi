@@ -106,8 +106,8 @@ jobInitialize <- function(envir) {
 
       # include extra arguments if function takes arguments
       if (length(formals(ienv)) > 0) {
-         iargs <- get('.$initArgs', pos=envir)
-         init <- c(init, list(envir), if (is.list(iargs)) iargs else NULL)
+        iargs <- get('.$initArgs', pos=envir)
+        init <- c(init, list(envir), if (is.list(iargs)) iargs else NULL)
       }
 
       # execute the initEnvir function
