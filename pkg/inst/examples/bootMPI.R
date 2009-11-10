@@ -18,10 +18,6 @@ chunking <- as.logical(Sys.getenv('CHUNKING', 'TRUE'))
 chunkSize <- if (chunking) ceiling(trials / getDoParWorkers()) else 1
 mpiopts <- list(chunkSize=chunkSize)
 
-profile <- as.logical(Sys.getenv('PROFILE', 'FALSE'))
-if (profile)
-  Rprof('doMPI.out')
-
 ptime <- system.time({
   r <- foreach(icount(trials), .combine=cbind, .options.mpi=mpiopts) %dopar% {
     ind <- sample(100, 100, replace=TRUE)
@@ -29,9 +25,6 @@ ptime <- system.time({
     coefficients(result1)
   }
 })[3]
-
-if (profile)
-  Rprof(NULL)
 
 cat(sprintf('Parallel time using doMPI on %d workers: %f\n',
             getDoParWorkers(), ptime))
