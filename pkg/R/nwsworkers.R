@@ -19,6 +19,10 @@
 # this is called by the user to create an nws cluster object
 startNWScluster <- function(..., timeout=60, verbose=FALSE, workdir=getwd(),
                             enablemulticore=TRUE, includemaster=FALSE) {
+  if (! require(nws)) {
+    stop('The nws package is required to create an nws cluster')
+  }
+
   # create a sleigh to implement our cluster
   sl <- sleigh(..., verbose=verbose, workingDir=workdir, logDir=workdir)
 
@@ -43,6 +47,7 @@ startNWScluster <- function(..., timeout=60, verbose=FALSE, workdir=getwd(),
   eo <- list(blocking=FALSE, closure=FALSE)
   runWorkerLoop <- function(verbose, enablemulticore, includemaster, masternode) {
     require(doMPI)
+    require(nws)
     if (enablemulticore) {
       enablemulticore <- suppressWarnings(require(multicore, quietly=TRUE))
     }
