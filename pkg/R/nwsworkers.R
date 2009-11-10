@@ -18,7 +18,7 @@
 
 # this is called by the user to create an nws cluster object
 startNWScluster <- function(..., timeout=60, verbose=FALSE, workdir=getwd(),
-                            includemaster=FALSE) {
+                            enablemulticore=TRUE, includemaster=FALSE) {
   # create a sleigh to implement our cluster
   sl <- sleigh(..., verbose=verbose, workingDir=workdir, logDir=workdir)
 
@@ -41,8 +41,11 @@ startNWScluster <- function(..., timeout=60, verbose=FALSE, workdir=getwd(),
 
   # start our workerLoop (without waiting for it to finish, of course)
   eo <- list(blocking=FALSE, closure=FALSE)
-  runWorkerLoop <- function(verbose, includemaster, masternode) {
+  runWorkerLoop <- function(verbose, enablemulticore, includemaster, masternode) {
     require(doMPI)
+    if (enablemulticore) {
+      enablemulticore <- suppressWarnings(require(multicore, quietly=TRUE))
+    }
 
     ws <- get('SleighUserNws', pos=globalenv())
     rank <- get('SleighRank', pos=globalenv()) + 1
@@ -52,23 +55,31 @@ startNWScluster <- function(..., timeout=60, verbose=FALSE, workdir=getwd(),
     id <- as.integer(Sys.getenv('RSleighLocalID'))
 
     # possibly adjust the number of cores if we're on the master node
-    numcores <- multicore:::detectCores()
-    nodename <- Sys.info()[['nodename']]
-    if (includemaster && nodename == masternode)
-      numcores <- numcores - 1
+    if (enablemulticore) {
+      numcores <- multicore:::detectCores()
+      nodename <- Sys.info()[['nodename']]
+      if (includemaster && nodename == masternode)
+        numcores <- numcores - 1
 
-    # compute the number of cores available to us
-    # this will determine if we will ever use mclapply
-    cores <- numcores %/% numprocs + (id < numcores %% numprocs)
-    cat(sprintf('numprocs: %d, id: %d, numcores: %d, cores: %d\n',
-                numprocs, id, numcores, cores))
+      # compute the number of cores available to us
+      # this will determine if we will ever use mclapply
+      cores <- numcores %/% numprocs + (id < numcores %% numprocs)
+      cat(sprintf('numprocs: %d, id: %d, numcores: %d, cores: %d\n',
+                  numprocs, id, numcores, cores))
+    } else {
+      cores <- 1
+      if (verbose) {
+        cat('multicore package is not being used\n')
+      }
+    }
 
     cl <- doMPI:::openNWScluster(ws, rank)
 
     doMPI:::workerLoop(cl, cores, verbose)
   }
   masternode <- Sys.info()[['nodename']]
-  sp <- eachWorker(sl, runWorkerLoop, verbose, includemaster, masternode, eo=eo)
+  sp <- eachWorker(sl, runWorkerLoop, verbose, enablemulticore,
+                   includemaster, masternode, eo=eo)
 
   obj <- list(sp=sp, sl=sl, ws=ws, wvars=workerVars)
   class(obj) <- c('nwscluster', 'cluster')

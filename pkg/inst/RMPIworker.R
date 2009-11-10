@@ -1,6 +1,7 @@
 local({
   # set default option values
   workdir <- Sys.getenv('TMPDIR', '/tmp')
+  enablemulticore <- TRUE
   includemaster <- FALSE  # assume master doesn't use much cpu time
   verbose <- FALSE
 
@@ -12,6 +13,8 @@ local({
 
     if (opt == 'WORKDIR') {
       workdir <- val
+    } else if (opt == 'ENABLEMULTICORE') {
+      enablemulticore <- as.logical(val)
     } else if (opt == 'INCLUDEMASTER') {
       includemaster <- as.logical(val)
     } else if (opt == 'VERBOSE') {
@@ -24,6 +27,11 @@ local({
   # load all packages that we need explicitly to avoid messages to stdout
   suppressMessages(library(methods))  # because we're using Rscript
   suppressMessages(library(doMPI))
+
+  # if multicore is enabled, attempt to load it
+  if (enablemulticore) {
+    enablemulticore <- suppressWarnings(require(multicore, quietly=TRUE))
+  }
 
   # initialize MPI
   comm <- 1
@@ -74,16 +82,24 @@ local({
   id <- which(sort(wids[idx]) == workerid)
 
   # possibly adjust the number of cores if we're on the master node
-  numcores <- multicore:::detectCores()
-  if (includemaster && nodename == masternode)
-    numcores <- numcores - 1
+  if (enablemulticore) {
+    numcores <- multicore:::detectCores()
+    if (includemaster && nodename == masternode)
+      numcores <- numcores - 1
 
-  # compute the number of cores available to us
-  # this will determine if we will ever use mclapply
-  cores <- numcores %/% numprocs + (id < numcores %% numprocs)
-  if (verbose) {
-    cat(sprintf('numprocs: %d, id: %d, numcores: %d, cores: %d\n',
-                numprocs, id, numcores, cores))
+    # compute the number of cores available to us
+    # this will determine if we will ever use mclapply
+    cores <- numcores %/% numprocs + (id < numcores %% numprocs)
+    if (verbose) {
+      cat(sprintf('numprocs: %d, id: %d, numcores: %d, cores: %d\n',
+                  numprocs, id, numcores, cores))
+    }
+  } else {
+    # we're not using multicore, so set cores to 1
+    cores <- 1
+    if (verbose) {
+      cat('multicore package is not being used\n')
+    }
   }
 
   # this is where all the work is done
