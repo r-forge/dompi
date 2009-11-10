@@ -18,7 +18,7 @@ local({
     } else if (opt == 'INCLUDEMASTER') {
       includemaster <- as.logical(val)
     } else if (opt == 'VERBOSE') {
-      vebose <- as.logical(val)
+      verbose <- as.logical(val)
     } else {
       warning('ignoring unrecognized option: ', opt)
     }
@@ -46,7 +46,13 @@ local({
 
   # set the current working directory as specified
   # XXX anything to do in case of failure?
-  try(setwd(workdir), silent=TRUE)
+  tryCatch({
+    setwd(workdir)
+  },
+  error=function(e) {
+    cat(sprintf('Error setting current directory to %s\n', workdir),
+        file=stderr())
+  })
 
   # open a worker log file
   outfile <- if (verbose) {
@@ -54,6 +60,11 @@ local({
   } else {
     '/dev/null'
   }
+
+  if (length(outfile) != 1) {
+    cat('Error computing outfile\n', file=stderr())
+  }
+
   doMPI:::sinkWorkerOutput(outfile)
 
   procname <- mpi.get.processor.name()
@@ -61,7 +72,7 @@ local({
 
   if (verbose) {
     cat("Starting MPI worker\n")
-    cat("Worker processor name: %s; nodename: %s\n", procname, nodename)
+    cat(sprintf("Worker processor name: %s; nodename: %s\n", procname, nodename))
   }
 
   # get the nodename of all the workers
