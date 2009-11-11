@@ -16,5 +16,6 @@ v <- foreach(y=x, .combine="cbind") %dopar% {
 # display the results with a perspective plot
 persp(x, x, v)
 
-# shutdown the MPI cluster
+# shutdown the cluster and finalize MPI
 closeCluster(cl)
+mpi.finalize()

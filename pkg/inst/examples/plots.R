@@ -21,3 +21,4 @@ foreach(i=icount(trials), .combine=trash, .multicombine=TRUE,
 }
 
 closeCluster(cl)
+mpi.finalize()
