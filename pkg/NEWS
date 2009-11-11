@@ -1,0 +1,10 @@
+NEWS/ChangeLog for doMPI
+------------------------
+
+0.1-1	2009-11-XX  --  not yet released
+    o	use of mclapply controlled via "enablemulticore" argument
+    o	multicore and nws are now suggested rather than required
+    o	new examples and a demo
+
+0.1	2009-10-31
+    o	project created on r-forge
