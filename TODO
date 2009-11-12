@@ -6,7 +6,7 @@ TODO:
 - Need to benchmark doMPI against doSNOW.  I'd like to know if
   broadcasting really helps.
 
-- Need more examples.  Also, bootMPI.R has become more of a benchmark.
+- Need more examples.
 
 - Need a test suite.
 
@@ -17,12 +17,6 @@ General issues:
   to determine information about themselves, such as its rank, node name
   and verbosity level?  What about the number of other workers started
   on this node?
-
-- Should we continue to support nws?
-
-- Would it be useful to support any other message passing API?
-
-- Should the message passing operations be implemented via methods?
 
 - Snow supports many more options in starting the workers.
   doMPI assumes an homogeneous installation and uses mpi.
