@@ -17,14 +17,19 @@
 # USA
 
 # this is called by the user to create an nws cluster object
-startNWScluster <- function(..., timeout=60, verbose=FALSE, workdir=getwd(),
-                            enablemulticore=TRUE, includemaster=FALSE) {
+startNWScluster <- function(count, verbose=FALSE, workdir=getwd(),
+                            logdir=workdir, enablemulticore=TRUE,
+                            includemaster=FALSE, timeout=60) {
+  if (missing(count)) {
+    stop('argument "count" must be specified')
+  }
+
   if (! require(nws)) {
     stop('The nws package is required to create an nws cluster')
   }
 
   # create a sleigh to implement our cluster
-  sl <- sleigh(..., verbose=verbose, workingDir=workdir, logDir=workdir)
+  sl <- sleigh(workerCount=count, verbose=verbose, workingDir=workdir, logDir=logdir)
 
   # make sure the sleigh is started
   stat <- status(sl, closeGroup=TRUE, timeout=timeout)

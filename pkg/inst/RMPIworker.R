@@ -18,7 +18,13 @@
 
 local({
   # set default option values
-  workdir <- Sys.getenv('TMPDIR', '/tmp')
+  tempdir <- Sys.getenv('TMPDIR', '/tmp')
+  if (!file.exists(tempdir)) {
+    tempdir <- getwd()
+  }
+    
+  workdir <- tempdir
+  logdir <- NULL
   enablemulticore <- TRUE
   includemaster <- FALSE  # assume master doesn't use much cpu time
   verbose <- FALSE
@@ -30,7 +36,17 @@ local({
     val <- substring(arg, i + 1)
 
     if (opt == 'WORKDIR') {
-      workdir <- val
+      if (file.exists(val)) {
+        workdir <- val
+      } else {
+        warning('Ignoring non-existent workdir: ', val)
+      }
+    } else if (opt == 'LOGDIR') {
+      if (file.exists(val)) {
+        logdir <- val
+      } else {
+        warning('Ignoring non-existent logdir: ', val)
+      }
     } else if (opt == 'ENABLEMULTICORE') {
       enablemulticore <- as.logical(val)
     } else if (opt == 'INCLUDEMASTER') {
@@ -40,6 +56,10 @@ local({
     } else {
       warning('ignoring unrecognized option: ', opt)
     }
+  }
+
+  if (is.null(logdir)) {
+    logdir <- workdir
   }
 
   # load all packages that we need explicitly to avoid messages to stdout
@@ -63,25 +83,34 @@ local({
   workerid <- mpi.comm.rank(comm)
 
   # set the current working directory as specified
-  # XXX anything to do in case of failure?
+  # this directory should exist, but we could get a permission error
   tryCatch({
     setwd(workdir)
   },
   error=function(e) {
     cat(sprintf('Error setting current directory to %s\n', workdir),
         file=stderr())
+    tryCatch({
+      setwd(tempdir)
+    },
+    error=function(e) {
+      cat(sprintf('Error setting current directory to %s\n', tempdir),
+          file=stderr())
+      cat(sprintf('Current working directory is %s\n', getwd()),
+          file=stderr())
+    })
   })
 
   # open a worker log file
   outfile <- if (verbose) {
-    sprintf('MPI_%d_%s.log', workerid, Sys.info()[['user']])
+    outname <- sprintf('MPI_%d_%s.log', workerid, Sys.info()[['user']])
+    file.path(logdir, outname)
   } else {
     '/dev/null'
   }
 
-  if (length(outfile) != 1) {
-    cat('Error computing outfile\n', file=stderr())
-  }
+  # sanity check outfile
+  stopifnot(length(outfile) == 1)
 
   # redirect stdout, stderr, warnings, etc, to outfile
   doMPI:::sinkWorkerOutput(outfile)

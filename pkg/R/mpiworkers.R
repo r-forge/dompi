@@ -28,7 +28,8 @@ local({
 
 # this is called by the user to create an mpi cluster object
 startMPIcluster <- function(count, verbose=FALSE, workdir=getwd(),
-                            enablemulticore=TRUE, includemaster=FALSE) {
+                            logdir=workdir, enablemulticore=TRUE,
+                            includemaster=TRUE) {
   cl <- getMPIcluster()
   if (!is.null(cl)) {
     if (missing(count) || count == cl$workerCount)
@@ -46,6 +47,7 @@ startMPIcluster <- function(count, verbose=FALSE, workdir=getwd(),
     script <- system.file("RMPIworker.R", package="doMPI")
     args <- c(script,
               sprintf("WORKDIR=%s", workdir),
+              sprintf("LOGDIR=%s", logdir),
               sprintf("ENABLEMULTICORE=%s", enablemulticore),
               sprintf("INCLUDEMASTER=%s", includemaster),
               sprintf("VERBOSE=%s", verbose))
