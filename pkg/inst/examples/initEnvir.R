@@ -28,7 +28,7 @@ finalEnvir <- function(envir) {
 }
 
 # Create and register an MPI cluster
-cl <- startMPIcluster(count=2, verbose=TRUE)
+cl <- startMPIcluster(2)
 registerDoMPI(cl)
 
 # Define a .combine function that throws away it's arguments

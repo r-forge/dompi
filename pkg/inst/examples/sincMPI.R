@@ -1,7 +1,7 @@
 library(doMPI)
 
 # create and register a doMPI cluster
-cl <- startMPIcluster(count=2)
+cl <- startMPIcluster(2)
 registerDoMPI(cl)
 
 # define the grid over which to compute the sinc function
