@@ -1,3 +1,14 @@
+#
+# NOTE:  I consider this to be a useful benchmark for comparing
+# different parallel systems, but it is important to keep in
+# mind that the tasks are rather small.  That is useful for
+# finding out how much overhead different parallel programming
+# systems add to task execution.  But because the tasks are small,
+# it isn't really a great candidate for parallel programming.
+# However, it isn't ridiculous either, and would be a very good
+# example using hardware from a decade ago.
+#
+
 library(doMPI)
 
 usenws <- as.logical(Sys.getenv('USENWS', 'FALSE'))
