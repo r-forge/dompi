@@ -43,7 +43,7 @@ mklogger <- function(verbose, out=stdout()) {
 # toplevel worker function
 workerLoop <- function(cl, cores, verbose, out=stdout()) {
   logger <- mklogger(verbose)
-  logger('starting worker loop')
+  logger('starting worker loop: cores = %d', cores)
 
   # loop over jobs, which correspond to calls to foreach
   while (!is.null(envir <- bcastRecvFromMaster(cl))) {
@@ -60,7 +60,8 @@ workerLoop <- function(cl, cores, verbose, out=stdout()) {
     checkTask(taskchunk, jid)
 
     while (! taskchunk$jobcomplete) {
-      logger('executing taskchunk %d', taskchunk$tid)
+      logger('executing taskchunk %d containing %d tasks',
+             taskchunk$tid, taskchunk$numtasks)
       resultchunk <- executeTaskChunk(cl$workerid, taskchunk, envir, err, cores)
 
       logger('returning results for taskchunk %d', taskchunk$tid)
@@ -217,12 +218,19 @@ executeTaskChunk <- function(workerid, taskchunk, envir, err, cores) {
     function(...) err
   }
 
-  list(numtasks=taskchunk$numtasks, tid=taskchunk$tid,
-       workerid=workerid, jid=taskchunk$jid,
-       resultslist = if (taskchunk$numtasks == 1)
-         list(executeTask(taskchunk$argslist[[1]]))
-       else if (cores <= 1)
-         lapply(taskchunk$argslist, executeTask)
-       else
-         mclapply(taskchunk$argslist, executeTask, mc.cores=cores))
+  numtasks <- taskchunk$numtasks
+
+  if (numtasks == 1) {
+    list(numtasks=numtasks, tid=taskchunk$tid,
+         workerid=workerid, jid=taskchunk$jid,
+         resultslist=list(executeTask(taskchunk$argslist[[1]])))
+  } else if (cores <= 1) {
+    list(numtasks=numtasks, tid=taskchunk$tid,
+         workerid=workerid, jid=taskchunk$jid,
+         resultslist=lapply(taskchunk$argslist, executeTask))
+  } else {
+    list(numtasks=numtasks, tid=taskchunk$tid,
+         workerid=workerid, jid=taskchunk$jid,
+         resultslist=mclapply(taskchunk$argslist, executeTask, mc.cores=cores))
+  }
 }
