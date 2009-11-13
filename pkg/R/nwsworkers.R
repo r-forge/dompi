@@ -39,7 +39,7 @@ startNWScluster <- function(count, verbose=FALSE, workdir=getwd(),
   workerids <- seq(length=stat$numWorkers)
 
   # get netWorkSpace object to use for all communications with workers
-  ws <- userNws(sl)
+  ws <- sl@userNws
 
   # declare all the workspace variables that we need
   nwsDeclare(ws, 'broadcast', 'single')
