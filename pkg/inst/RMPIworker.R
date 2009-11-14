@@ -25,7 +25,7 @@ local({
     
   workdir <- tempdir
   logdir <- NULL
-  enablemulticore <- TRUE
+  maxcores <- 64
   includemaster <- FALSE  # assume master doesn't use much cpu time
   verbose <- FALSE
 
@@ -47,8 +47,8 @@ local({
       } else {
         warning('Ignoring non-existent logdir: ', val)
       }
-    } else if (opt == 'ENABLEMULTICORE') {
-      enablemulticore <- as.logical(val)
+    } else if (opt == 'MAXCORES') {
+      maxcores <- as.integer(val)
     } else if (opt == 'INCLUDEMASTER') {
       includemaster <- as.logical(val)
     } else if (opt == 'VERBOSE') {
@@ -66,10 +66,11 @@ local({
   suppressMessages(library(methods))  # because we're using Rscript
   suppressMessages(library(doMPI))
 
-  # if multicore is enabled, attempt to load it
-  if (enablemulticore) {
-    enablemulticore <- suppressWarnings(require(multicore, quietly=TRUE))
-  }
+  # if maxcores is greater than 1, then attempt to load multicore
+  usemc <- if (maxcores > 1)
+    suppressWarnings(require(multicore, quietly=TRUE))
+  else
+    FALSE
 
   # initialize MPI
   comm <- 1
@@ -142,8 +143,16 @@ local({
   id <- which(sort(wids[idx]) == workerid)
 
   # possibly adjust the number of cores if we're on the master node
-  if (enablemulticore) {
+  if (usemc) {
     numcores <- multicore:::detectCores()
+    if (numcores > maxcores) {
+      if (verbose) {
+        cat(sprintf('reducing numcores from %d to %d as per maxcores\n',
+                    numcores, maxcores))
+      }
+      numcores <- maxcores
+    }
+
     if (includemaster && nodename == masternode)
       numcores <- numcores - 1
 

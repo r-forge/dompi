@@ -15,14 +15,14 @@ usenws <- as.logical(Sys.getenv('USENWS', 'FALSE'))
 count <- as.integer(Sys.getenv('COUNT', '2'))
 verbose <- as.logical(Sys.getenv('VERBOSE', 'FALSE'))
 im <- as.logical(Sys.getenv('INCLUDEMASTER', 'TRUE'))
-usemc <- as.logical(Sys.getenv('USEMC', 'TRUE'))
+maxcores <- as.integer(Sys.getenv('MAXCORES', '4'))
 
 cl <- if (usenws) {
   startNWScluster(count=count, verbose=verbose, includemaster=im,
-                  enablemulticore=usemc)
+                  maxcores=maxcores)
 } else {
   startMPIcluster(count=count, verbose=verbose, includemaster=im,
-                  enablemulticore=usemc)
+                  maxcores=maxcores)
 }
 registerDoMPI(cl)
 

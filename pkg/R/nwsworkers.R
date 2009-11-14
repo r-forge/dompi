@@ -18,7 +18,7 @@
 
 # this is called by the user to create an nws cluster object
 startNWScluster <- function(count, verbose=FALSE, workdir=getwd(),
-                            logdir=workdir, enablemulticore=TRUE,
+                            logdir=workdir, maxcores=64,
                             includemaster=FALSE, timeout=60) {
   if (missing(count)) {
     stop('argument "count" must be specified')
@@ -50,12 +50,15 @@ startNWScluster <- function(count, verbose=FALSE, workdir=getwd(),
 
   # start our workerLoop (without waiting for it to finish, of course)
   eo <- list(blocking=FALSE, closure=FALSE)
-  runWorkerLoop <- function(verbose, enablemulticore, includemaster, masternode) {
+  runWorkerLoop <- function(verbose, maxcores, includemaster, masternode) {
     require(doMPI)
     require(nws)
-    if (enablemulticore) {
-      enablemulticore <- suppressWarnings(require(multicore, quietly=TRUE))
-    }
+
+    # if maxcores is greater than 1, then attempt to load multicore
+    usemc <- if (maxcores > 1)
+      suppressWarnings(require(multicore, quietly=TRUE))
+    else
+      FALSE
 
     ws <- get('SleighUserNws', pos=globalenv())
     rank <- get('SleighRank', pos=globalenv()) + 1
@@ -65,8 +68,15 @@ startNWScluster <- function(count, verbose=FALSE, workdir=getwd(),
     id <- as.integer(Sys.getenv('RSleighLocalID'))
 
     # possibly adjust the number of cores if we're on the master node
-    if (enablemulticore) {
+    if (usemc) {
       numcores <- multicore:::detectCores()
+      if (numcores > maxcores) {
+        if (verbose) {
+          cat(sprintf('reducing numcores from %d to %d as per maxcores\n',
+                      numcores, maxcores))
+        }
+        numcores <- maxcores
+      }
       nodename <- Sys.info()[['nodename']]
       if (includemaster && nodename == masternode)
         numcores <- numcores - 1
@@ -88,7 +98,7 @@ startNWScluster <- function(count, verbose=FALSE, workdir=getwd(),
     doMPI:::workerLoop(cl, cores, verbose)
   }
   masternode <- Sys.info()[['nodename']]
-  sp <- eachWorker(sl, runWorkerLoop, verbose, enablemulticore,
+  sp <- eachWorker(sl, runWorkerLoop, verbose, maxcores,
                    includemaster, masternode, eo=eo)
 
   obj <- list(sp=sp, sl=sl, ws=ws, wvars=workerVars)

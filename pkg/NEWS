@@ -2,8 +2,8 @@ NEWS/ChangeLog for doMPI
 ------------------------
 
 0.1-1	2009-11-XX  --  not yet released
-    o	added logdir argument to startMPIcluster
-    o	use of mclapply controlled via "enablemulticore" argument
+    o	added logdir argument to startMPIcluster and startNWScluster
+    o	use of mclapply controlled via "maxcores" argument
     o	multicore and nws are now suggested rather than required
     o	new examples and a demo
 

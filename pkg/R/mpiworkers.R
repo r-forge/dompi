@@ -28,7 +28,7 @@ local({
 
 # this is called by the user to create an mpi cluster object
 startMPIcluster <- function(count, verbose=FALSE, workdir=getwd(),
-                            logdir=workdir, enablemulticore=TRUE,
+                            logdir=workdir, maxcores=64,
                             includemaster=TRUE) {
   cl <- getMPIcluster()
   if (!is.null(cl)) {
@@ -48,7 +48,7 @@ startMPIcluster <- function(count, verbose=FALSE, workdir=getwd(),
     args <- c(script,
               sprintf("WORKDIR=%s", workdir),
               sprintf("LOGDIR=%s", logdir),
-              sprintf("ENABLEMULTICORE=%s", enablemulticore),
+              sprintf("MAXCORES=%d", maxcores),
               sprintf("INCLUDEMASTER=%s", includemaster),
               sprintf("VERBOSE=%s", verbose))
 
