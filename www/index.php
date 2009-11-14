@@ -43,13 +43,14 @@ This allows it to do more, and execute more efficiently.
 <h2>Features of the doMPI backend</h2>
 <p>
 <ul>
-  <li>Tasks arguments are fetched when they are submitted to a cluster worker.</li>
+  <li>Task arguments are not fetched from the iterators until they are needed
+      in order to use less memory.</li>
   <li>Results are processed by the master as they are returned by the cluster workers.</li>
   <li>A chunkSize option is supported to increase task granularity for
       better performance.</li>
   <li>If chunkSize is used, and a cluster worker has multiple cores, the mclapply
-      function from the 'multicore' package is used to execute the tasks in parallel.
-      This enables hybrid parallelism.</li>
+      function from the 'multicore' package is used to execute the tasks in parallel,
+      thus providing hybrid parallelism.</li>
   <li>Data that is common to all tasks is broadcast to the cluster workers.</li>
   <li>Backend-specific options for initializing and finalizing the worker execution
       environments.</li>
