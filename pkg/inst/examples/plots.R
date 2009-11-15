@@ -1,3 +1,10 @@
+#
+# Note: this example can fail on Mac OS X.  I get the following
+# error when starting remote workers with orterun:
+#
+#  "On-demand launch of the Window Server is allowed for root user only."
+#
+
 library(doMPI)
 
 # create and register a doMPI cluster
