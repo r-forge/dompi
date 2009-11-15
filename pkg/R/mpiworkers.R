@@ -30,6 +30,18 @@ local({
 startMPIcluster <- function(count, verbose=FALSE, workdir=getwd(),
                             logdir=workdir, maxcores=64,
                             includemaster=TRUE) {
+  # I think this restriction is currently necessary
+  if (mpi.comm.rank(0) != 0) {
+    warning('perhaps you should use "-n 1" from mpirun/orterun?')
+    stop('startMPIcluster should only be executed from rank 0 of comm 0')
+  }
+
+  # I think this warning is useful, but I'm still studying the issue
+  if (mpi.comm.size(0) > 1) {
+    warning(sprintf('the size of comm 0 is %d', mpi.comm.size(0)))
+    warning('perhaps you should use "-n 1" from mpirun/orterun?')
+  }
+
   cl <- getMPIcluster()
   if (!is.null(cl)) {
     if (missing(count) || count == cl$workerCount)
@@ -40,8 +52,9 @@ startMPIcluster <- function(count, verbose=FALSE, workdir=getwd(),
   } else {
     comm <- 1
     intercomm <- 2
-    if (mpi.comm.size(comm) > 0)
+    if (mpi.comm.size(comm) > 0) {
       stop(paste("an MPI cluster already exists:", comm))
+    }
 
     rscript <- file.path(R.home(), "bin", "Rscript")
     script <- system.file("RMPIworker.R", package="doMPI")
