@@ -45,9 +45,6 @@ cat(sprintf('Parallel time using doMPI on %d workers: %f\n',
             getDoParWorkers(), ptime))
 
 closeCluster(cl)
-if (!usenws) {
-  mpi.finalize()
-}
 
 sequential <- as.logical(Sys.getenv('SEQUENTIAL', 'FALSE'))
 if (sequential) {
@@ -62,4 +59,8 @@ if (sequential) {
   cat(sprintf('Sequential time: %f\n', stime))
   cat(sprintf('Speed up for %d workers: %f\n',
               getDoParWorkers(), round(stime / ptime, digits=2)))
+}
+
+if (!usenws) {
+  mpi.quit()
 }

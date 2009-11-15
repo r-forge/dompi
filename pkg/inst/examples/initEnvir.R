@@ -44,6 +44,6 @@ foreach(i=1:10, .options.mpi=mpiopts,
   cat(sprintf('This is task number %d\n', i), file=out)
 }
 
-# Shut down the MPI cluster and finalize MPI
+# Shut down the MPI cluster and quit
 closeCluster(cl)
-mpi.finalize()
+mpi.quit()

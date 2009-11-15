@@ -27,6 +27,6 @@ foreach(i=icount(trials), .combine=trash, .multicombine=TRUE,
   NULL
 }
 
-# shutdown the cluster and finalize MPI
+# shutdown the cluster and quit
 closeCluster(cl)
-mpi.finalize()
+mpi.quit()

@@ -22,6 +22,6 @@ r <- foreach(icount(trials), .combine='cbind', .options.mpi=mpiopts) %dopar% {
 # print the resulting matrix
 print(r)
 
-# shutdown the cluster and finalize MPI
+# shutdown the cluster and quit
 closeCluster(cl)
-mpi.finalize()
+mpi.quit()

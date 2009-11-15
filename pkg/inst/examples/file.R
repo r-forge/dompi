@@ -27,6 +27,6 @@ foreach(i=1:10, .init=f, .final=close, .combine=writeResults,
   sprintf('This is the result of task number %d', i)
 }
 
-# Shut down the MPI cluster and finalize MPI
+# Shut down the MPI cluster and quit
 closeCluster(cl)
-mpi.finalize()
+mpi.quit()
