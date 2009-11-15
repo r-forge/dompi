@@ -32,14 +32,14 @@ startMPIcluster <- function(count, verbose=FALSE, workdir=getwd(),
                             includemaster=TRUE) {
   # I think this restriction is currently necessary
   if (mpi.comm.rank(0) != 0) {
-    warning('perhaps you should use "-n 1" from mpirun/orterun?')
+    warning('perhaps you should use "-np 1" from mpirun/orterun?')
     stop('startMPIcluster should only be executed from rank 0 of comm 0')
   }
 
   # I think this warning is useful, but I'm still studying the issue
   if (mpi.comm.size(0) > 1) {
     warning(sprintf('the size of comm 0 is %d', mpi.comm.size(0)))
-    warning('perhaps you should use "-n 1" from mpirun/orterun?')
+    warning('perhaps you should use "-np 1" from mpirun/orterun?')
   }
 
   cl <- getMPIcluster()
