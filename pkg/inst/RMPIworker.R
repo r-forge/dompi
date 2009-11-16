@@ -140,7 +140,7 @@ local({
   nodev <- unlist(nodelist)
   idx <- which(nodev == nodename)
   numprocs <- length(idx)
-  id <- which(sort(wids[idx]) == workerid)
+  id <- which(sort(wids[idx]) == workerid) - 1
 
   # possibly adjust the number of cores if we're on the master node
   if (usemc) {
