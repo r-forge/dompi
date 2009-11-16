@@ -28,7 +28,7 @@ local({
 
 # this is called by the user to create an mpi cluster object
 startMPIcluster <- function(count, verbose=FALSE, workdir=getwd(),
-                            logdir=workdir, maxcores=64,
+                            logdir=workdir, maxcores=1,
                             includemaster=TRUE) {
   # I think this restriction is currently necessary
   if (mpi.comm.rank(0) != 0) {

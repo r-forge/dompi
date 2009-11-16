@@ -21,7 +21,7 @@ usenws <- as.logical(Sys.getenv('USENWS', 'FALSE'))
 count <- as.integer(Sys.getenv('COUNT', '2'))
 verbose <- as.logical(Sys.getenv('VERBOSE', 'FALSE'))
 im <- as.logical(Sys.getenv('INCLUDEMASTER', 'TRUE'))
-maxcores <- as.integer(Sys.getenv('MAXCORES', '4'))
+maxcores <- as.integer(Sys.getenv('MAXCORES', '1'))
 
 cl <- if (usenws) {
   startNWScluster(count=count, verbose=verbose, includemaster=im,

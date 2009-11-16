@@ -7,7 +7,7 @@ for use with doMPI.
 }
 \usage{
 startNWScluster(count, verbose=FALSE, workdir=getwd(), logdir=workdir,
-                maxcores=64, includemaster=FALSE, timeout=60)
+                maxcores=1, includemaster=FALSE, timeout=60)
 }
 \arguments{
   \item{count}{Number of workers to spawn.}
@@ -15,8 +15,7 @@ startNWScluster(count, verbose=FALSE, workdir=getwd(), logdir=workdir,
   \item{workdir}{Working directory of the cluster workers.  Defaults to the master's
   working directory.}
   \item{logdir}{Directory to put the worker log files.  Defaults to \code{workdir}.}
-  \item{maxcores}{Maximum number of cores for workers to use.
-  Defaults to \code{64}.}
+  \item{maxcores}{Maximum number of cores for workers to use.  Defaults to \code{1}.}
   \item{includemaster}{Indicates if the master process should be counted as a load o the CPU.
   This will effect how many cores will be used on the local machine by mclapply,
   if a worker process is started on the local machine.  The default value is FALSE,

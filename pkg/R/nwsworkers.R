@@ -18,7 +18,7 @@
 
 # this is called by the user to create an nws cluster object
 startNWScluster <- function(count, verbose=FALSE, workdir=getwd(),
-                            logdir=workdir, maxcores=64,
+                            logdir=workdir, maxcores=1,
                             includemaster=FALSE, timeout=60) {
   if (missing(count)) {
     stop('argument "count" must be specified')
