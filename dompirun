@@ -1,17 +1,20 @@
 #!/bin/sh
 
-HOSTFILE=$HOME/.dompi-hostfile
+DEFHOSTFILE=$HOME/.dompi-hostfile
+HOSTFILE=$DEFHOSTFILE
 RPROG=R
 ORTERUN=orterun
-USAGE="usage: dompirun [option ...] script [arg ...]
+USAGE='Usage: dompirun [option ...] [--] script [arg ...]
 
 Options:
 
-  -H    List of hosts on which to invoke processes
-  -R    Path of the R interpreter
-  -o    Path of the orterun command
-  -f    Path of the hostfile (-H option takes precedence)
-  -h    Print this message"
+  -H    List of hosts on which to invoke processes.  This option takes
+        precedence over the "-f" option.
+  -R    Path of the R interpreter.  The default value is "R".
+  -o    Path of the orterun command.
+  -f    Path of the hostfile.  This option is ignored if the "-H" option
+        is specified.  The default value is "'$DEFHOSTFILE'".
+  -h    Print this message and exit.  All other options are ignored.'
 
 # process the command line
 while test "$1" != ""; do
@@ -26,6 +29,7 @@ while test "$1" != ""; do
         -o) ORTERUN=$2; shift ;;
         -f) HOSTFILE=$2; shift ;;
         -h) echo "$USAGE" 1>&2; exit 1 ;;
+        --) SCRIPT=$2; shift; shift; break ;;
         -*) echo "dompirun: unknown argument $1" 1>&2; exit 1 ;;
         *) SCRIPT=$1; shift; break
     esac
