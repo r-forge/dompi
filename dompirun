@@ -1,15 +1,54 @@
 #!/bin/sh
 
 HOSTFILE=$HOME/.dompi-hostfile
-SCRIPT=$1
-shift
-if [ ! -f $SCRIPT ]; then
-    echo "error: script file does not exist: $SCRIPT" 1>&2; exit 1
+RPROG=R
+ORTERUN=orterun
+USAGE="usage: dompirun [option ...] script [arg ...]
+
+Options:
+
+  -H    List of hosts on which to invoke processes
+  -R    Path of the R interpreter
+  -o    Path of the orterun command
+  -f    Path of the hostfile (-H option takes precedence)
+  -h    Print this message"
+
+# process the command line
+while test "$1" != ""; do
+    case "$1" in
+        -H) if test "$2" = ""; then
+                HOSTS=localhost
+            else
+                HOSTS=$2
+            fi
+            shift ;;
+        -R) RPROG=$2; shift ;;
+        -o) ORTERUN=$2; shift ;;
+        -f) HOSTFILE=$2; shift ;;
+        -h) echo "$USAGE" 1>&2; exit 1 ;;
+        -*) echo "dompirun: unknown argument $1" 1>&2; exit 1 ;;
+        *) SCRIPT=$1; shift; break
+    esac
+    shift
+done
+
+# sanity check the specified script file
+if test "$SCRIPT" = ""; then
+    echo "$USAGE" 1>&2; exit 1
+else
+    if test ! -f "$SCRIPT"; then
+        echo "error: script file does not exist: $SCRIPT" 1>&2; exit 1
+    fi
 fi
 
-if [ -f $HOSTFILE ]; then
-    exec orterun --hostfile $HOSTFILE -np 1 R --vanilla --slave -f $SCRIPT --args "$@"
+# run the script
+if test "$HOSTS" != ""; then
+    exec "$ORTERUN" -H "$HOSTS" -n 1 "$RPROG" --vanilla --slave -f "$SCRIPT" --args "$@"
 else
-    echo "warning: hostfile $HOSTFILE not found" 1>&2
-    exec orterun -np 1 R --vanilla --slave -f $SCRIPT --args "$@"
+    if test -f $HOSTFILE; then
+        exec "$ORTERUN" --hostfile "$HOSTFILE" -n 1 "$RPROG" --vanilla --slave -f "$SCRIPT" --args "$@"
+    else
+        echo "warning: hostfile $HOSTFILE not found" 1>&2
+        exec "$ORTERUN" -n 1 "$RPROG" --vanilla --slave -f "$SCRIPT" --args "$@"
+    fi
 fi
