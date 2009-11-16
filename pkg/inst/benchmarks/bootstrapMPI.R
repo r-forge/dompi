@@ -8,6 +8,12 @@
 # However, it isn't ridiculous either, and would be a very good
 # example using hardware from a decade ago.
 #
+# Also note that because this is a benchmark, I am not actually
+# combining the task results, but am throwing them away.  That
+# allows me to test just the speed of the parallel programming
+# system, not the speed of the combine mechanism in the foreach
+# package.
+#
 
 library(doMPI)
 
@@ -32,9 +38,11 @@ trials <- 10000
 chunking <- as.logical(Sys.getenv('CHUNKING', 'TRUE'))
 chunkSize <- if (chunking) ceiling(trials / getDoParWorkers()) else 1
 mpiopts <- list(chunkSize=chunkSize)
+trash <- function(...) NULL
 
 ptime <- system.time({
-  r <- foreach(icount(trials), .combine=cbind, .options.mpi=mpiopts) %dopar% {
+  foreach(icount(trials), .combine=trash, .multicombine=TRUE,
+               .options.mpi=mpiopts) %dopar% {
     ind <- sample(100, 100, replace=TRUE)
     result1 <- glm(x[ind,2]~x[ind,1], family=binomial(logit))
     coefficients(result1)
@@ -49,7 +57,7 @@ closeCluster(cl)
 sequential <- as.logical(Sys.getenv('SEQUENTIAL', 'FALSE'))
 if (sequential) {
   stime <- system.time({
-    r <- foreach(icount(trials), .combine=cbind) %do% {
+    foreach(icount(trials), .combine=trash, .multicombine=TRUE) %do% {
       ind <- sample(100, 100, replace=TRUE)
       result1 <- glm(x[ind,2]~x[ind,1], family=binomial(logit))
       coefficients(result1)
