@@ -9,9 +9,9 @@ The doMPI Package
 The \code{doMPI} package provides a parallel backend for the \code{foreach}
 package. It is similar to the \code{doSNOW} package, but uses \code{Rmpi}
 directly. This allows it to do more, and execute more efficiently.
-It also uses the \code{multicore} package to execute tasks across multiple
-cores on the worker nodes.  This is can give very good performance on a
-computer cluster with multicore processors.
+It can also make use of the \code{multicore} package to execute tasks
+across multiple cores on the worker nodes.  This is can give very good
+performance on a computer cluster with multicore processors.
 }
 \details{
 There are several backend-specific options that can be specified when using
