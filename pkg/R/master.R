@@ -106,7 +106,8 @@ master <- function(cl, expr, it, envir, packages, verbose, chunkSize, info,
   submitted <- 0     # number of taskchunks submitted
   returned <- 0      # number of resultslist returned
 
-  # submit a taskchunk to each worker in the cluster (unless we run out of tasks)
+  # submit a taskchunk to each worker in the cluster
+  # unless we run out of tasks
   while (submitted < clusterSize(cl) && moretasks) {
     workerid <- submitted + 1  # workerid ranges from 1 to clusterSize(cl)
     if (verbose)
