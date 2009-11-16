@@ -1,0 +1,15 @@
+#!/bin/sh
+
+HOSTFILE=$HOME/.dompi-hostfile
+SCRIPT=$1
+shift
+if [ ! -f $SCRIPT ]; then
+    echo "error: script file does not exist: $SCRIPT" 1>&2; exit 1
+fi
+
+if [ -f $HOSTFILE ]; then
+    exec orterun --hostfile $HOSTFILE -np 1 R --vanilla --slave -f $SCRIPT --args "$@"
+else
+    echo "warning: hostfile $HOSTFILE not found" 1>&2
+    exec orterun -np 1 R --vanilla --slave -f $SCRIPT --args "$@"
+fi
