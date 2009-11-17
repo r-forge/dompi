@@ -91,7 +91,7 @@ a rather large and complex \texttt{API}.  For example, the \texttt{Rmpi}
 package defines about 110 \texttt{R} functions, only a few of which are
 only for internal use.  And the \texttt{MPI} standard includes many more
 functions that aren't supported by \texttt{Rmpi}, such as the file
-functions.  Of course, you only need to learn about a small percentage
+functions.  Of course, you only need to learn a small percentage
 of those functions in order to start using \texttt{MPI} effectively, but
 it can take awhile just to figure out which functions are really
 important, and which ones you can safely ignore.
@@ -106,62 +106,60 @@ Unfortunately, there are still a wide variety of problems that you may
 run into.  First, you need to have \texttt{MPI} installed on your
 computers, and then you have to build and install \texttt{Rmpi} to use
 that \texttt{MPI} installation.  That is where many people run into
-problems, particularly on Windows.  On Ubuntu, it is very easy to
+problems, particularly on Windows.  However, on Ubuntu, it is very easy to
 install \texttt{OpenMPI}, and \texttt{Rmpi} works quite well with it.
-Mac OS X 10.5 and later includes \texttt{OpenMPI} with the developer
-tools, and \texttt{Rmpi} works well with that, also.
+Mac~OS~X~10.5 and later includes \texttt{OpenMPI} with the developer
+tools, and \texttt{Rmpi} works well there, also.
 
-Another think to be aware of is that you have to run your \texttt{R}
-programs differently in order to execute on a computer cluster, and the
-exact method varies depending on what \texttt{MPI} implementation was
-used to build your installation of \texttt{Rmpi}.  If you just start a
-normal \texttt{R} session, your workers will probably only run on your
-local machine.  That's great for testing, but the point of using
-\texttt{Rmpi} is to use multiple machines, and perhaps a cluster.  To do
-that, you'll need to start your \texttt{R} session using a comman such
-as orterun, mpirun, or mpiexec, depending on your \texttt{MPI}
+Another thing to be aware of is that you have to run your \texttt{R}
+programs differently in order to execute on multiple computers, and the
+exact method varies depending on your \texttt{MPI} implementation.  If
+you just start a normal \texttt{R} session, your workers will only run
+on your local machine.  That's great for testing, but the point of using
+\texttt{Rmpi} is to use multiple machines.  To do that, you'll need to
+start your \texttt{R} session using a command such as \texttt{orterun},
+\texttt{mpirun}, or \texttt{mpiexec}, depending on your \texttt{MPI}
 installation.
 
 Hopefully, this document will help to get you started, but it primarily
-deals with \texttt{foreach} and \texttt{doMPI}, and for running
-\texttt{doMPI} scripts, I'll only discuss the use of \texttt{OpenMPI}.
-Very likely you will have some trouble that I can't help you with, and
-so I highly recommend that you join the R-sig-hpc mailing list.  It is a
-very friendly and helpful community, and there isn't even a lot of
-traffic on it.
+deals with programming issues, and for running \texttt{doMPI} scripts,
+I'll only discuss the use of \texttt{OpenMPI}.  Very likely you will
+have some problem that I can't help you with, and so I highly recommend
+that you join the R-sig-hpc mailing list.  It is a very friendly and
+helpful community, and there isn't even a lot of traffic on it.
 
 \section{Installing the software}
 
 Assuming that you already have \texttt{R} and \texttt{MPI} installed on
 your computers, you will need to install \texttt{doMPI} and all of it's
 dependencies.  That could be done with a single ``install.packages''
-command, but you might want to explicityly install \texttt{Rmpi} first,
+command, but you might want to explicitly install \texttt{Rmpi} first,
 just so you can clearly see whether it gets installed correctly or not.
 On Ubuntu, you can actually install \texttt{Rmpi} by using
 \texttt{apt-get} to install the Debian \texttt{r-cran-rmpi} package.
-That's the most fool-proof way to install it on Ubuntu.  But on other
-systems, including Mac OS X, you can install it with:
+That's the most fool-proof way to install \texttt{Rmpi} on Ubuntu.  But
+on other systems, including Mac~OS~X, you can install it with:
 
-<<install, eval=FALSE>>=
+<<eval=FALSE>>=
 install.packages("Rmpi")
 @
 
 As I mentioned, if you have problems, I strongly recommend the R-sig-hpc
 mailing list if you don't have a local expert.  I'm not an expert on
-installing \texttt{Rmpi}, since I've only ever installed it on Ubuntu
-and Mac OS X.
+installing \texttt{Rmpi}, since I've only installed it on Ubuntu and
+Mac~OS~X.
 
 Once \texttt{Rmpi} is installed, the rest should be easy:
 
-<<install, eval=FALSE>>=
+<<eval=FALSE>>=
 install.packages("doMPI", dependencies=TRUE)
 @
 
 That will also install packages such as \texttt{foreach} and
-\texttt{iterators}.  You may also want to install the multicore package,
-which can be used by \texttt{doMPI}, but it is not required.  Oddly
-enough, it is also possible to use \texttt{doMPI} with the nws package,
-but again, it's not required.
+\texttt{iterators}.  You may also want to install the \texttt{multicore}
+package, which can be used by \texttt{doMPI}, but it is not required.
+Oddly enough, it's also possible to use \texttt{doMPI} with the
+\texttt{nws} package, but again, it's not required.
 
 \section{Getting Started}
 
@@ -171,7 +169,8 @@ testing purposes, we'll just run on a single computer.  In that case,
 you just start a normal \texttt{R} session.  I'll talk about running on
 multiple computers later.
 
-Once you've started an \texttt{R} session, load \texttt{doMPI} as normal:
+Once you've started an \texttt{R} session, load the \texttt{doMPI}
+package:
 
 <<>>=
 library(doMPI)
@@ -193,18 +192,20 @@ here's one way to do that:
 cl <- startMPIcluster(count=2)
 @
 
-As you can see from the friendly message, this starts two cluster
-workers, or slaves, as \texttt{MPI} calls them.  Note that if you're
-using \texttt{OpenMPI}, those two processes will immediately start using
-as much of your CPU as they can.  This is a known issue with
-\texttt{OpenMPI}.  They are waiting for the master process to send them
-a message, but they are ``busy waiting'' for that message.  That doesn't
-make much sense in this context, but it can give better performance in
-some contexts.  At any rate, it is an issue that the \texttt{OpenMPI}
-group is planning to address in a future release.
+As you can see from the friendly message\footnote{The message is from
+\texttt{mpi.comm.spawn}, not \texttt{startMPIcluster}, by the way.},
+this starts two cluster workers, or slaves, as \texttt{MPI} calls them.
+Note that if you're using \texttt{OpenMPI}, those two processes will
+immediately start using as much of your CPU as they can.  This is a
+known issue with \texttt{OpenMPI}.  They are waiting for the master
+process to send them a message, but they are ``busy waiting'' for that
+message.  That doesn't make much sense in this context, but it can give
+better performance in some contexts.  At any rate, it is an issue that
+the \texttt{OpenMPI} group is planning to address in a future release.
 
 The next step is to register the \texttt{MPI} cluster object with the
-\texttt{foreach} package.  This is done with the ``registerDoMPI'':
+\texttt{foreach} package.  This is done with the ``registerDoMPI''
+function:
 
 <<>>=
 registerDoMPI(cl)
@@ -214,15 +215,15 @@ This tells \texttt{foreach} that you want to use \texttt{doMPI} as the
 parallel backend, and that you want to use the specified \texttt{MPI}
 cluster object to execute the tasks.  If you don't register a cluster
 object, your tasks won't be executed in parallel, even though you use
-\texttt{foreach} with the \%dopar\% operator.
+\texttt{foreach} with the \texttt{\%dopar\%} operator.
 
 \section{A simple example}
 
 Now we're ready to run a little test that actually runs in parallel.  I
 always do that with a very simple program that executes the
 \texttt{sqrt} function in parallel.  It's not a practical use of
-\texttt{foreach} because the \texttt{sqrt} function runs so fast that it
-makes no sense to execute it in parallel.  But it makes a great test.
+\texttt{foreach}, because the \texttt{sqrt} function runs so fast that
+it makes no sense to execute it in parallel.  But it makes a great test.
 
 <<>>=
 foreach(i=1:3) %dopar% sqrt(i)
@@ -240,7 +241,8 @@ Secondly, notice that we're using a strange binary operator, named
 \texttt{\%dopar\%}.  \texttt{R} doesn't really make it easy to define
 new control structures, but since arguments to functions are lazily
 evaluated, it is possible.  You don't have to worry about that, however.
-Just keep in mind that it needs to be there.
+Just keep in mind that you need to put \texttt{\%dopar\%} in between the
+\texttt{foreach} and the loop body.
 
 In a real program, you'll obviously want to save the results of the
 computations.  You may also have several operations to perform, so the
@@ -253,17 +255,18 @@ x <- foreach(i=1:3) %dopar% {
 x
 @
 
-Now if you squint a bit it will look just like a for-loop.
+The braces are a good practice since they force the correct operator
+precedence.  And if you squint hard, it looks just like a for-loop.
 
 \section{The .combine option}
 
 But what if we want our results to be returned in a vector, rather than
 a list?  We could convert it to a list afterwards, but there's another
-way.  The \texttt{foreach} function takes a number of addition
+way.  The \texttt{foreach} function takes a number of additional
 arguments, all of which start with a ``.'' to distinguish them from the
 ``variable'' arguments.  The one we need in this case is named
-\texttt{.combine}.  You can use it to specify a function that will
-combine the results.  This function must take at least two input
+\texttt{.combine}.  You can use it to specify a function that will be
+used to combine the results.  This function must take at least two input
 arguments, and return a value which is a ``combined'' or possibly
 ``reduced'' version of its input arguments.  To combine many numeric
 values into a single vector of numeric values, we can use the standard
@@ -337,15 +340,15 @@ it makes me very happy that the parallel version is actually shorter and
 easier to explain than the sequential version.
 
 I should also point out that in this \texttt{sinc} example, I've been
-very careful to make use of vector operations.  The primary rule for
-getting good performance in \texttt{R} is to use vector operations
-whenever possible.  I flagrantly broke that rule in the \texttt{sqrt}
-example.  In the \texttt{sinc} example, I used vector operations to
-compute the columns, and I used \texttt{foreach} to execute those vector
-operations in parallel.  The \texttt{sinc} example is still not really
-compute intensive enough to really merit executing it in parallel, but
-it's a much better example use of \texttt{foreach} than the
-\texttt{sqrt} example.
+very careful to make use of vector operations in the loop.  The primary
+rule for getting good performance in \texttt{R} is to use vector
+operations whenever possible.  I flagrantly broke that rule in the
+\texttt{sqrt} example.  In the \texttt{sinc} example, I used vector
+operations to compute the columns, and I used \texttt{foreach} to
+execute those vector operations in parallel.  The \texttt{sinc} example
+is still not really compute intensive enough to really merit executing
+it in parallel, but at least it uses much better \texttt{R} programming
+style.
 
 \section{Processing a directory of data files}
 
@@ -353,8 +356,12 @@ Now let's try a different kind of example that you probably haven't seen
 in any parallel programming book, but simply reeks of practicality.
 Let's say that you have a directory full of CSV data files, and you want
 to read each of them, analyze the data in some way, and produce a plot
-of the results that you write to output files.  Here I'll do that using
-the \texttt{randomForest} package:
+of the results that you write to output files.  Obviously, it's
+embarrassingly parallel, it can be time consuming, and it's a common
+task to perform.
+
+Let's perform that kind of operation using Andy Liaw's
+\texttt{randomForest} package:
 
 <<results=hide>>=
 ifiles <- list.files(pattern="\\.csv$")
@@ -390,7 +397,7 @@ The basic way to execute \texttt{doMPI} scripts on multiple computers is
 to execute the \texttt{R} interpreter using the command from your
 \texttt{MPI} installation that is intended to run \texttt{MPI} programs.
 That command is usually named \texttt{mpirun}, \texttt{mpiexec}, or in
-the case of \texttt{OpenMPI}, \texttt{orterun}.  Since I have only ever
+the case of \texttt{OpenMPI}, \texttt{orterun}.  Since I've only
 used \texttt{OpenMPI}, I'll only discuss the use of \texttt{orterun}.
 
 An important point to keep in mind is that you only want and need to
@@ -399,19 +406,20 @@ master machine.  I usually use my local machine as the master, but that
 isn't necessary with \texttt{MPI}, as I understand it.  The cluster
 workers are started via the \texttt{Rmpi} \texttt{mpi.comm.spawn}
 function when you execute \texttt{startMPIcluster}.  The \texttt{R}
-script that they execute is called \texttt{RMPIworker.R}, which is in
-the \texttt{doMPI} installation directory.
+script that the workers execute is called \texttt{RMPIworker.R}, which
+is in the \texttt{doMPI} installation directory.
 
 So the trick is to get \texttt{orterun} to execute your \texttt{doMPI}
 script on a single computer, but to create an environment in which you
-can spawn workers on other computers.  This is the way that I do it:
+can spawn workers on some other computers.  Here's an example that uses
+\texttt{orterun} to execute one of the \texttt{doMPI} examples:
 
 \begin{verbatim}
 % orterun -H localhost,n2,n3 -n 1 R --slave --vanilla -f sincMPI.R
 \end{verbatim}
 
 The \texttt{-H} option specifies a comma separated list of computers to
-use.  The \texttt{-n} option says to run the command on only one
+use.  The \texttt{-n} option says to run the specified command on only one
 machine, which will be the first one listed with \texttt{-H}, which is
 ``localhost'' in this example.  The actual command that will be executed
 on localhost is ``R'', which is of course the \texttt{R} interpreter.
@@ -421,10 +429,11 @@ specified via the \texttt{-f} option.  By also specifying ``n2'' and
 start worker processes on those computers when ``sincMPI.R''
 calls \texttt{startMPIcluster}.
 
-That may seem a bit complicated, but it's not too bad.  Just remember to
-use the \texttt{-H} option to specify the machines to run on, and always
-use \texttt{-n 1}.  The rest is just the \texttt{R} command line to
-execute a script non-interactively.
+This may seem a bit complicated, but it's not too bad.  And if you've
+run \texttt{snow} programs using \texttt{Rmpi}, it may look very
+familiar.  Just remember to use the \texttt{-H} option to specify the
+machines to run on, and always use \texttt{-n 1}.  The rest is just the
+\texttt{R} command line to execute a script non-interactively.
 
 Of course, in order for this to work, you've got to set up a lot of
 things correctly on the computers specified via \texttt{-H}.  Generally
@@ -432,7 +441,7 @@ speaking, I would strongly suggest that you specify computers that have
 an environment that is almost identical to your local machine.  That is,
 they should all have the same user account, with the same home
 directory, with passwordless ssh enabled, and all of the same software
-installed using the same file paths.  For example \texttt{R} should be
+installed using the same file paths.  For example, \texttt{R} should be
 installed in the same place on all machines, and the \texttt{doMPI}
 package should be installed in the same directory on all machines, as
 well.  That's a pretty big requirement, but that's the way most people
@@ -445,18 +454,32 @@ That works when you're in an interactive \texttt{R} session, and when
 executing the script via \texttt{orterun}.  However, when you use
 \texttt{orterun}, you don't have to specify a value for count, since the
 default value of count is one less than the value return by
-\texttt{mpi.universe.size}.  That allows you to control the number of
-workers that are spawned via the \texttt{orterun} command.
+\texttt{mpi.universe.size}\footnote{It appears to me that the size of
+the \texttt{MPI} universe is equal to the number of names specified via
+the \texttt{-H} option, but other options would probably change that.}.
+That allows you to control the number of workers that are spawned via
+the \texttt{orterun} command.
 
 \section{Conclusion}
 
-So if you haven't done it yet, install \texttt{doMPI} and start playing
-around with it.  If you are using Windows, you can just install the
-\texttt{foreach} and \texttt{iterators} packages and still run all of
-these examples.  You just won't be running in parallel.  You'll get a
-warning that you're running sequentially, but you should get exactly the
-same results.  But that will allow you to develop parallel applications
-on your Windows machine, which you can later deploy on a Linux cluster
-using \texttt{doMPI}.
+I'd like to end by saying how easy parallel computing on a computer
+cluster can be if you use \texttt{foreach} and \texttt{doMPI}.  And it
+is a lot simpler than many of the alternatives.  But running on networks
+of computers always seems to present challenges.  Hopefully, by using
+\texttt{foreach} and \texttt{doMPI}, most of those will be system
+administration challenges, and not programming challenges.  Since
+\texttt{foreach} allows you to separate your parallel program from your
+parallel environment, you can develop your program on a single computer,
+without using any parallel backend at all, let alone a tricky one.  Once
+your program is debugged and working, you can run it on a multicore
+workstation using a low maintenance parallel backend such as
+\texttt{doMC}\footnote{The \texttt{doMC} package is also available on
+CRAN.}.  And once you've got a computer cluster set up that has all the
+software installed by some friendly sysadmin, with an NFS-mounted home
+directory, you can use the \texttt{doMPI} package to run that same
+parallel program very efficiently using \texttt{MPI} without having to
+learn anything about message passing.
+
+Have fun!
 
 \end{document}
