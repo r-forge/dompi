@@ -382,19 +382,73 @@ executing the loop are written to disk by the workers directly.
 
 \section{Running doMPI on a cluster}
 
-Now that you've run some interesting examples on a single computer,
+Now that we've run some interesting examples on a single computer,
 let's try running on multiple computers, which is really the purpose of
 the \texttt{doMPI} package.
 
-[Describe how to use the orterun command.]
+The basic way to execute \texttt{doMPI} scripts on multiple computers is
+to execute the \texttt{R} interpreter using the command from your
+\texttt{MPI} installation that is intended to run \texttt{MPI} programs.
+That command is usually named \texttt{mpirun}, \texttt{mpiexec}, or in
+the case of \texttt{OpenMPI}, \texttt{orterun}.  Since I have only ever
+used \texttt{OpenMPI}, I'll only discuss the use of \texttt{orterun}.
+
+An important point to keep in mind is that you only want and need to
+execute your \texttt{doMPI} script on one machine, which I call the
+master machine.  I usually use my local machine as the master, but that
+isn't necessary with \texttt{MPI}, as I understand it.  The cluster
+workers are started via the \texttt{Rmpi} \texttt{mpi.comm.spawn}
+function when you execute \texttt{startMPIcluster}.  The \texttt{R}
+script that they execute is called \texttt{RMPIworker.R}, which is in
+the \texttt{doMPI} installation directory.
+
+So the trick is to get \texttt{orterun} to execute your \texttt{doMPI}
+script on a single computer, but to create an environment in which you
+can spawn workers on other computers.  This is the way that I do it:
+
+\begin{verbatim}
+% orterun -H localhost,n2,n3 -n 1 R --slave --vanilla -f sincMPI.R
+\end{verbatim}
+
+The \texttt{-H} option specifies a comma separated list of computers to
+use.  The \texttt{-n} option says to run the command on only one
+machine, which will be the first one listed with \texttt{-H}, which is
+``localhost'' in this example.  The actual command that will be executed
+on localhost is ``R'', which is of course the \texttt{R} interpreter.
+The \texttt{R} command will execute the ``sincMPI.R'' script, which we
+specified via the \texttt{-f} option.  By also specifying ``n2'' and
+``n3'' with the \texttt{-H} option, the \texttt{mpi.comm.spawn} function will
+start worker processes on those computers when ``sincMPI.R''
+calls \texttt{startMPIcluster}.
+
+That may seem a bit complicated, but it's not too bad.  Just remember to
+use the \texttt{-H} option to specify the machines to run on, and always
+use \texttt{-n 1}.  The rest is just the \texttt{R} command line to
+execute a script non-interactively.
+
+Of course, in order for this to work, you've got to set up a lot of
+things correctly on the computers specified via \texttt{-H}.  Generally
+speaking, I would strongly suggest that you specify computers that have
+an environment that is almost identical to your local machine.  That is,
+they should all have the same user account, with the same home
+directory, with passwordless ssh enabled, and all of the same software
+installed using the same file paths.  For example \texttt{R} should be
+installed in the same place on all machines, and the \texttt{doMPI}
+package should be installed in the same directory on all machines, as
+well.  That's a pretty big requirement, but that's the way most people
+do things if they're using \texttt{MPI}, and so that's the way that many
+computer clusters are configured.
+
+Also note that when the ``sincMPI.R'' script calls the
+\texttt{startMPIcluster} function, it specifies a worker count of two.
+That works when you're in an interactive \texttt{R} session, and when
+executing the script via \texttt{orterun}.  However, when you use
+\texttt{orterun}, you don't have to specify a value for count, since the
+default value of count is one less than the value return by
+\texttt{mpi.universe.size}.  That allows you to control the number of
+workers that are spawned via the \texttt{orterun} command.
 
 \section{Conclusion}
-
-There's a lot more that I could show you about \texttt{foreach}, but
-this is a good place to stop, because at the moment I want to convince
-you that it is easy to use \texttt{foreach} for basic parallel
-programming tasks.  On another day I may try to convince you that you
-can do rather sophisticated tasks, also.
 
 So if you haven't done it yet, install \texttt{doMPI} and start playing
 around with it.  If you are using Windows, you can just install the
@@ -402,8 +456,7 @@ around with it.  If you are using Windows, you can just install the
 these examples.  You just won't be running in parallel.  You'll get a
 warning that you're running sequentially, but you should get exactly the
 same results.  But that will allow you to develop parallel applications
-on your Windows machine, which you can later deploy on a Linux cluster.
-
-Have fun!
+on your Windows machine, which you can later deploy on a Linux cluster
+using \texttt{doMPI}.
 
 \end{document}
