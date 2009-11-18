@@ -106,10 +106,10 @@ Unfortunately, there are still a wide variety of problems that you may
 run into.  First, you need to have \texttt{MPI} installed on your
 computers, and then you have to build and install \texttt{Rmpi} to use
 that \texttt{MPI} installation.  That is where many people run into
-problems, particularly on Windows.  However, on Ubuntu, it is very easy to
-install \texttt{OpenMPI}, and \texttt{Rmpi} works quite well with it.
-Mac~OS~X~10.5 and later includes \texttt{OpenMPI} with the developer
-tools, and \texttt{Rmpi} works well there, also.
+problems, particularly on Windows.  However, on Debian / Ubuntu, it is
+very easy to install \texttt{OpenMPI}, and \texttt{Rmpi} works quite
+well with it.  Mac~OS~X~10.5 and later includes \texttt{OpenMPI} with
+the developer tools, and \texttt{Rmpi} works well there, also.
 
 Another thing to be aware of is that you have to run your \texttt{R}
 programs differently in order to execute on multiple computers, and the
@@ -135,11 +135,13 @@ Assuming that you already have \texttt{R} and \texttt{MPI} installed on
 your computers, you will need to install \texttt{doMPI} and the packages
 that it depends on.  That can be done with a single ``install.packages''
 command, but you might want to explicitly install \texttt{Rmpi} first,
-so you can clearly see if it installs correctly or not.  On Ubuntu, you
-can actually install \texttt{Rmpi} by using \texttt{apt-get} to install
-the Debian \texttt{r-cran-rmpi} package.  That's the most fool-proof way
-to install \texttt{Rmpi} on Ubuntu.  But on other systems, including
-Mac~OS~X, you can install it with:
+so you can clearly see if it installs correctly or not.  On Debian /
+Ubuntu, you can actually install \texttt{Rmpi} by using \texttt{apt-get}
+to install the Debian \texttt{r-cran-rmpi} package.  That's the most
+fool-proof way to install \texttt{Rmpi} on Ubuntu, for example, since
+\texttt{apt-get} will automatically install a compatible version of
+\texttt{MPI}, if necessary.  But on other systems, including Mac~OS~X,
+you can install it with:
 
 <<eval=FALSE>>=
 install.packages("Rmpi")
@@ -185,8 +187,7 @@ around for the error, scratch your head for awhile, and then post a
 polite, well-thought-out request for help to R-sig-hpc that includes the
 entire error message.  Very possibly, someone on the list has
 encountered that error before, and will offer advice on how to fix it.
-But don't be too surprised if someone\footnote{Like Dirk, for example.}
-suggests that you switch to Ubuntu.
+But don't be too surprised if someone suggests that you switch to Ubuntu.
 
 Once you can successfully load \texttt{doMPI}, the next step is to
 create an \texttt{MPI} cluster object.  There are lots of options, but
