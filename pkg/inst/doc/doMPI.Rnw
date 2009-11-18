@@ -72,6 +72,8 @@
 
 <<loadLibs,results=hide,echo=FALSE>>=
 library(doMPI)
+# examples in this document will be executed sequentially
+registerDoSEQ()
 @
 
 The \texttt{doMPI} package is what I call a ``parallel backend'' for the
@@ -193,13 +195,11 @@ Once you can successfully load \texttt{doMPI}, the next step is to
 create an \texttt{MPI} cluster object.  There are lots of options, but
 here's one way to do that:
 
-<<>>=
+<<eval=FALSE>>=
 cl <- startMPIcluster(count=2)
 @
 
-As you can see from the friendly message\footnote{This message is from
-\texttt{mpi.comm.spawn}, not \texttt{startMPIcluster}, by the way.},
-this starts two cluster workers, or slaves, as \texttt{MPI} calls them.
+This starts two cluster workers, or slaves, as \texttt{MPI} calls them.
 Note that if you're using \texttt{OpenMPI}, those two processes will
 immediately start using as much of your CPU as they can.  This is a
 known issue with \texttt{OpenMPI}.  They are waiting for the master
@@ -212,7 +212,7 @@ The next step is to register the \texttt{MPI} cluster object with the
 \texttt{foreach} package.  This is done with the ``registerDoMPI''
 function:
 
-<<>>=
+<<eval=FALSE>>=
 registerDoMPI(cl)
 @
 
