@@ -116,38 +116,40 @@ programs differently in order to execute on multiple computers, and the
 exact method varies depending on your \texttt{MPI} implementation.  If
 you just start a normal \texttt{R} session, your workers will only run
 on your local machine.  That's great for testing, but the point of using
-\texttt{Rmpi} is to use multiple machines.  To do that, you'll need to
-start your \texttt{R} session using a command such as \texttt{orterun},
-\texttt{mpirun}, or \texttt{mpiexec}, depending on your \texttt{MPI}
-installation.
+\texttt{doMPI} is to execute on multiple computers.  To do that, you'll
+need to start your \texttt{R} session using a command such as
+\texttt{orterun}, \texttt{mpirun}, or \texttt{mpiexec}, depending on
+your \texttt{MPI} installation.
 
-Hopefully, this document will help to get you started, but it primarily
-deals with programming issues, and for running \texttt{doMPI} scripts,
-I'll only discuss the use of \texttt{OpenMPI}.  Very likely you will
-have some problem that I can't help you with, and so I highly recommend
-that you join the R-sig-hpc mailing list.  It is a very friendly and
-helpful community, and there isn't even a lot of traffic on it.
+Hopefully, this document will help you to get started, but it primarily
+deals with programming issues, not configuring or administering
+computers.  And for running \texttt{doMPI} scripts, I only discuss the
+use of \texttt{OpenMPI}.  Very likely you will have some problem that I
+couldn't help you with anyway, and so I highly recommend that you join
+the R-sig-hpc mailing list.  It is a very friendly and helpful
+community, and there isn't even a lot of traffic on it.
 
 \section{Installing the software}
 
 Assuming that you already have \texttt{R} and \texttt{MPI} installed on
-your computers, you will need to install \texttt{doMPI} and all of it's
-dependencies.  That could be done with a single ``install.packages''
+your computers, you will need to install \texttt{doMPI} and the packages
+that it depends on.  That can be done with a single ``install.packages''
 command, but you might want to explicitly install \texttt{Rmpi} first,
-just so you can clearly see whether it gets installed correctly or not.
-On Ubuntu, you can actually install \texttt{Rmpi} by using
-\texttt{apt-get} to install the Debian \texttt{r-cran-rmpi} package.
-That's the most fool-proof way to install \texttt{Rmpi} on Ubuntu.  But
-on other systems, including Mac~OS~X, you can install it with:
+so you can clearly see if it installs correctly or not.  On Ubuntu, you
+can actually install \texttt{Rmpi} by using \texttt{apt-get} to install
+the Debian \texttt{r-cran-rmpi} package.  That's the most fool-proof way
+to install \texttt{Rmpi} on Ubuntu.  But on other systems, including
+Mac~OS~X, you can install it with:
 
 <<eval=FALSE>>=
 install.packages("Rmpi")
 @
 
 As I mentioned, if you have problems, I strongly recommend the R-sig-hpc
-mailing list if you don't have a local expert.  I'm not an expert on
+mailing list if you don't have a local expert.  I'm certainly not an expert on
 installing \texttt{Rmpi}, since I've only installed it on Ubuntu and
-Mac~OS~X.
+Mac~OS~X, where, as I said, it's easy to install.\footnote{Am I being
+too subtle here?}
 
 Once \texttt{Rmpi} is installed, the rest should be easy:
 
@@ -167,7 +169,7 @@ So if I haven't scared you off with my introduction, and you got all of
 the software installed, then it's time to see if it actually works!  For
 testing purposes, we'll just run on a single computer.  In that case,
 you just start a normal \texttt{R} session.  I'll talk about running on
-multiple computers later.
+multiple computers later, in section 8.
 
 Once you've started an \texttt{R} session, load the \texttt{doMPI}
 package:
@@ -176,13 +178,15 @@ package:
 library(doMPI)
 @
 
-You'll get an error if \texttt{Rmpi} isn't properly installed.  If that
-happens, you should restart the \texttt{R} session, load \texttt{Rmpi}
-directly, write down the exact error message, google around for the
-error, scratch your head for awhile, and then post a polite,
-well-thought-out request for help to R-sig-hpc.  But don't be too
-surprised if someone\footnote{Like Dirk, for example.} suggests that you
-switch to Ubuntu.
+You'll no doubt get an error at this point if \texttt{Rmpi} isn't
+properly installed.  If that happens, you should restart the \texttt{R}
+session, load \texttt{Rmpi}, make a copy of the error message, google
+around for the error, scratch your head for awhile, and then post a
+polite, well-thought-out request for help to R-sig-hpc that includes the
+entire error message.  Very possibly, someone on the list has
+encountered that error before, and will offer advice on how to fix it.
+But don't be too surprised if someone\footnote{Like Dirk, for example.}
+suggests that you switch to Ubuntu.
 
 Once you can successfully load \texttt{doMPI}, the next step is to
 create an \texttt{MPI} cluster object.  There are lots of options, but
@@ -192,7 +196,7 @@ here's one way to do that:
 cl <- startMPIcluster(count=2)
 @
 
-As you can see from the friendly message\footnote{The message is from
+As you can see from the friendly message\footnote{This message is from
 \texttt{mpi.comm.spawn}, not \texttt{startMPIcluster}, by the way.},
 this starts two cluster workers, or slaves, as \texttt{MPI} calls them.
 Note that if you're using \texttt{OpenMPI}, those two processes will
