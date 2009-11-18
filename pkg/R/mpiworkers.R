@@ -103,7 +103,7 @@ startMPIcluster <- function(count, verbose=FALSE, workdir=getwd(),
     nodelist <- mpi.allgather.Robj(nodelist, comm)
 
     cl <- list(workerCount=count)
-    class(cl) <- c("mpicluster", "cluster")
+    class(cl) <- c("mpicluster", "dompicluster")
     setMPIcluster(cl)
     cl
   }
@@ -153,7 +153,7 @@ recvFromAnyWorker.mpicluster <- function(cl) {
 # this is called by the cluster workers to create an mpi cluster object
 openMPIcluster <- function(workerid) {
   obj <- list(workerid=workerid)
-  class(obj) <- c('mpicluster', 'cluster')
+  class(obj) <- c('mpicluster', 'dompicluster')
   obj
 }
 

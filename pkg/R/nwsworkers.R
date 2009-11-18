@@ -102,7 +102,7 @@ startNWScluster <- function(count, verbose=FALSE, workdir=getwd(),
                    includemaster, masternode, eo=eo)
 
   obj <- list(sp=sp, sl=sl, ws=ws, wvars=workerVars)
-  class(obj) <- c('nwscluster', 'cluster')
+  class(obj) <- c('nwscluster', 'dompicluster')
   obj
 }
 
@@ -141,7 +141,7 @@ openNWScluster <- function(ws, workerid) {
   wvar <- sprintf('worker_%d', workerid)
   broadcast <- nwsIFind(ws, 'broadcast')
   obj <- list(broadcast=broadcast, ws=ws, workerid=workerid, wvar=wvar)
-  class(obj) <- c('nwscluster', 'cluster')
+  class(obj) <- c('nwscluster', 'dompicluster')
   obj
 }
 
