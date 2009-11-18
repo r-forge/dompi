@@ -17,11 +17,11 @@
 # USA
 
 # this is called by the user to create an nws cluster object
-startNWScluster <- function(count, verbose=FALSE, workdir=getwd(),
-                            logdir=workdir, maxcores=1,
-                            includemaster=FALSE, timeout=60) {
-  if (missing(count)) {
-    stop('argument "count" must be specified')
+startNWScluster <- function(count=length(nodelist), verbose=FALSE,
+                            workdir=getwd(), logdir=workdir, maxcores=1,
+                            includemaster=FALSE, timeout=60, nodelist) {
+  if (missing(count) && missing(nodelist)) {
+    stop('either "count" or "nodelist" must be specified')
   }
 
   if (! require(nws)) {
@@ -29,12 +29,19 @@ startNWScluster <- function(count, verbose=FALSE, workdir=getwd(),
   }
 
   # create a sleigh to implement our cluster
-  sl <- sleigh(workerCount=count, verbose=verbose, workingDir=workdir, logDir=logdir)
+  sl <- if (missing(nodelist)) {
+    sleigh(workerCount=count, verbose=verbose, workingDir=workdir,
+           logDir=logdir)
+  } else {
+    sleigh(nodeList=nodelist, launch=sshcmd, workerCount=count,
+           verbose=verbose, workingDir=workdir, logDir=logdir)
+  }
 
   # make sure the sleigh is started
   stat <- status(sl, closeGroup=TRUE, timeout=timeout)
-  if (stat$numWorkers == 0)
+  if (stat$numWorkers == 0) {
     stop('unable to successfully start a sleigh')
+  }
 
   workerids <- seq(length=stat$numWorkers)
 

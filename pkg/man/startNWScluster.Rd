@@ -6,11 +6,12 @@ The \code{startNWScluster} function is used to start an NWS cluster
 for use with doMPI.
 }
 \usage{
-startNWScluster(count, verbose=FALSE, workdir=getwd(), logdir=workdir,
-                maxcores=1, includemaster=FALSE, timeout=60)
+startNWScluster(count=length(nodelist), verbose=FALSE, workdir=getwd(),
+                logdir=workdir, maxcores=1, includemaster=FALSE,
+                timeout=60, nodelist)
 }
 \arguments{
-  \item{count}{Number of workers to spawn.}
+  \item{count}{Number of workers to spawn.  Defaults to length(nodelist).}
   \item{verbose}{Indicates if verbose messages should be enabled.  Defaults to \code{FALSE}.}
   \item{workdir}{Working directory of the cluster workers.  Defaults to the master's
   working directory.}
@@ -21,20 +22,18 @@ startNWScluster(count, verbose=FALSE, workdir=getwd(), logdir=workdir,
   if a worker process is started on the local machine.  The default value is FALSE,
   since the master process doesn't tend to use much CPU with nws.  Defaults to \code{TRUE}.}
   \item{timeout}{Number of seconds to wait for the sleigh workers to start.}
-}
-\seealso{
-  \code{\link[nws]{sleigh}}
+  \item{nodelist}{List of nodes on which to run workers.}
 }
 \examples{
 \dontrun{
 # start and register an NWS cluster with two workers in verbose mode:
-cl <- startNWScluster(workerCount=2, verbose=TRUE)
+cl <- startNWScluster(count=2, verbose=TRUE)
 registerDoNWS(cl)
 # and shut it down
 closeCluster(cl)
 
 # set the log directory to the current directory:
-cl <- startNWScluster(workerCount=2, logDir='.', verbose=TRUE)
+cl <- startNWScluster(count=2, logDir='.', verbose=TRUE)
 registerDoNWS(cl)
 # and shut it down
 closeCluster(cl)
