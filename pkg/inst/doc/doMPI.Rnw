@@ -71,7 +71,7 @@
 \section{Introduction}
 
 <<loadLibs,results=hide,echo=FALSE>>=
-library(doMPI)
+library(foreach)
 # examples in this document will be executed sequentially
 registerDoSEQ()
 @
@@ -109,8 +109,8 @@ run into.  First, you need to have \texttt{MPI} installed on your
 computers, and then you have to build and install \texttt{Rmpi} to use
 that \texttt{MPI} installation.  That is where many people run into
 problems, particularly on Windows.  However, on Debian / Ubuntu, it is
-very easy to install \texttt{OpenMPI}, and \texttt{Rmpi} works quite
-well with it.  Mac~OS~X~10.5 and later includes \texttt{OpenMPI} with
+very easy to install \texttt{Open MPI}, and \texttt{Rmpi} works quite
+well with it.  Mac~OS~X~10.5 and later includes \texttt{Open MPI} with
 the developer tools, and \texttt{Rmpi} works well there, also.
 
 Another thing to be aware of is that you have to run your \texttt{R}
@@ -126,7 +126,7 @@ your \texttt{MPI} installation.
 Hopefully, this document will help you to get started, but it primarily
 deals with programming issues, not configuring or administering
 computers.  And for running \texttt{doMPI} scripts, I only discuss the
-use of \texttt{OpenMPI}.  Very likely you will have some problem that I
+use of \texttt{Open MPI}.  Very likely you will have some problem that I
 couldn't help you with anyway, and so I highly recommend that you join
 the R-sig-hpc mailing list.  It is a very friendly and helpful
 community, and there isn't even a lot of traffic on it.
@@ -178,7 +178,7 @@ multiple computers later, in section 8.
 Once you've started an \texttt{R} session, load the \texttt{doMPI}
 package:
 
-<<>>=
+<<eval=FALSE>>=
 library(doMPI)
 @
 
@@ -200,13 +200,13 @@ cl <- startMPIcluster(count=2)
 @
 
 This starts two cluster workers, or slaves, as \texttt{MPI} calls them.
-Note that if you're using \texttt{OpenMPI}, those two processes will
+Note that if you're using \texttt{Open MPI}, those two processes will
 immediately start using as much of your CPU as they can.  This is a
-known issue with \texttt{OpenMPI}.  They are waiting for the master
+known issue with \texttt{Open MPI}.  They are waiting for the master
 process to send them a message, but they are ``busy waiting'' for that
 message.  That doesn't make much sense in this context, but it can give
 better performance in some contexts.  At any rate, it is an issue that
-the \texttt{OpenMPI} group is planning to address in a future release.
+the \texttt{Open MPI} group is planning to address in a future release.
 
 The next step is to register the \texttt{MPI} cluster object with the
 \texttt{foreach} package.  This is done with the ``registerDoMPI''
@@ -221,6 +221,25 @@ parallel backend, and that you want to use the specified \texttt{MPI}
 cluster object to execute the tasks.  If you don't register a cluster
 object, your tasks won't be executed in parallel, even though you use
 \texttt{foreach} with the \texttt{\%dopar\%} operator.
+
+When you are finished using the \texttt{MPI} cluster object, it is
+important to shut it down, otherwise you may leak processes on your
+cluster.\footnote{Shutting down the workers is particularly important
+with \texttt{Open MPI}, since they use CPU time even when they are
+``idle''.} You do that with the \texttt{closeCluster} function:
+
+<<eval=FALSE>>=
+closeCluster(cl)
+@
+
+And finally, you should probably call \texttt{mpi.quit} to exit your
+\texttt{R} session when using \texttt{doMPI}.  You could call
+\texttt{mpi.finalize} instead if you want to use \texttt{doMPI}
+interactively during testing.  Both of these functions will ``finalize''
+\texttt{MPI}, which is a requirement for \texttt{MPI} programs.  I'm not
+sure what the consequences are of not finalizing \texttt{MPI}, but I
+have seen error messages from \texttt{orterun} when I forgot to
+finalize.
 
 \section{A simple example}
 
@@ -402,8 +421,8 @@ The basic way to execute \texttt{doMPI} scripts on multiple computers is
 to execute the \texttt{R} interpreter using the command from your
 \texttt{MPI} installation that is intended to run \texttt{MPI} programs.
 That command is usually named \texttt{mpirun}, \texttt{mpiexec}, or in
-the case of \texttt{OpenMPI}, \texttt{orterun}.  Since I've only
-used \texttt{OpenMPI}, I'll only discuss the use of \texttt{orterun}.
+the case of \texttt{Open MPI}, \texttt{orterun}.  Since I've only
+used \texttt{Open MPI}, I'll only discuss the use of \texttt{orterun}.
 
 An important point to keep in mind is that you only want and need to
 execute your \texttt{doMPI} script on one machine, which I call the
