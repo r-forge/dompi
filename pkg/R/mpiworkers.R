@@ -135,15 +135,10 @@ sendToWorker.mpicluster <- function(cl, workerid, robj) {
 recvFromAnyWorker.mpicluster <- function(cl) {
   tag <- 22  # master tag
   comm <- 1
-
-  ## snow does it this way, but I don't know why
-  ## possibly for historic reasons?
-  # status <- 0
-  # mpi.probe(mpi.any.source(), tag, comm, status)
-  # srctag <- mpi.get.sourcetag(status)
-  # mpi.recv.Robj(srctag[1], srctag[2], comm)
-
-  mpi.recv.Robj(mpi.any.source(), tag, comm)
+  status <- 0
+  mpi.probe(mpi.any.source(), tag, comm, status)
+  srctag <- mpi.get.sourcetag(status)
+  mpi.recv.Robj(srctag[1], srctag[2], comm)
 }
 
 ############################
