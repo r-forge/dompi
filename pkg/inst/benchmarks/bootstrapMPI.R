@@ -18,7 +18,7 @@
 library(doMPI)
 
 usenws <- as.logical(Sys.getenv('USENWS', 'FALSE'))
-count <- as.integer(Sys.getenv('COUNT', '2'))
+count <- as.integer(Sys.getenv('COUNT', '3'))
 verbose <- as.logical(Sys.getenv('VERBOSE', 'FALSE'))
 im <- as.logical(Sys.getenv('INCLUDEMASTER', 'TRUE'))
 maxcores <- as.integer(Sys.getenv('MAXCORES', '1'))
