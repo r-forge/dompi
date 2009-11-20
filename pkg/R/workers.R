@@ -20,7 +20,7 @@
 # master methods
 #################
 
-clusterSize <- function(cl) {
+clusterSize <- function(cl, ...) {
   UseMethod('clusterSize')
 }
 
@@ -28,15 +28,15 @@ closeCluster <- function(cl, ...) {
   UseMethod('closeCluster')
 }
 
-bcastSendToCluster <- function(cl, robj) {
+bcastSendToCluster <- function(cl, robj, ...) {
   UseMethod('bcastSendToCluster')
 }
 
-sendToWorker <- function(cl, workerid, robj) {
+sendToWorker <- function(cl, workerid, robj, ...) {
   UseMethod('sendToWorker')
 }
 
-recvFromAnyWorker <- function(cl) {
+recvFromAnyWorker <- function(cl, ...) {
   UseMethod('recvFromAnyWorker')
 }
 
@@ -44,15 +44,15 @@ recvFromAnyWorker <- function(cl) {
 # worker methods
 #################
 
-bcastRecvFromMaster <- function(cl) {
+bcastRecvFromMaster <- function(cl, ...) {
   UseMethod('bcastRecvFromMaster')
 }
 
-sendToMaster <- function(cl, robj) {
+sendToMaster <- function(cl, robj, ...) {
   UseMethod('sendToMaster')
 }
 
-recvFromMaster <- function(cl) {
+recvFromMaster <- function(cl, ...) {
   UseMethod('recvFromMaster')
 }
 

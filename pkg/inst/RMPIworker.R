@@ -27,6 +27,7 @@ local({
   logdir <- NULL
   maxcores <- 64
   includemaster <- FALSE  # assume master doesn't use much cpu time
+  bcast <- TRUE
   verbose <- FALSE
 
   # process the command line
@@ -51,6 +52,8 @@ local({
       maxcores <- as.integer(val)
     } else if (opt == 'INCLUDEMASTER') {
       includemaster <- as.logical(val)
+    } else if (opt == 'BCAST') {
+      bcast <- as.logical(val)
     } else if (opt == 'VERBOSE') {
       verbose <- as.logical(val)
     } else {
@@ -172,7 +175,7 @@ local({
   }
 
   # this is where all the work is done
-  cl <- doMPI:::openMPIcluster(workerid)
+  cl <- doMPI:::openMPIcluster(workerid, bcast)
   doMPI:::workerLoop(cl, cores, verbose)
 
   # shutdown MPI

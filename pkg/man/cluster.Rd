@@ -7,7 +7,7 @@
 \code{closeCluster} shuts down and cleans up a cluster.
 }
 \usage{
-clusterSize(cl)
+clusterSize(cl, ...)
 closeCluster(cl, ...)
 }
 \arguments{

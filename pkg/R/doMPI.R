@@ -43,6 +43,7 @@ doMPI <- function(obj, expr, envir, data) {
   initArgs <- NULL
   finalEnvir <- NULL
   finalArgs <- NULL
+  profile <- FALSE
 
   if (!inherits(obj, 'foreach'))
     stop('obj must be a foreach object')
@@ -54,7 +55,8 @@ doMPI <- function(obj, expr, envir, data) {
   if (!is.null(options)) {
     nms <- names(options)
     recog <- nms %in% c('chunkSize', 'info',
-                        'initEnvir', 'initArgs', 'finalEnvir', 'finalArgs')
+                        'initEnvir', 'initArgs', 'finalEnvir', 'finalArgs',
+                        'profile')
     if (any(!recog))
       warning(sprintf('ignoring unrecognized mpi option(s): %s',
                       paste(nms[!recog], collapse=', ')), call.=FALSE)
@@ -122,10 +124,20 @@ doMPI <- function(obj, expr, envir, data) {
         warning('finalArgs must be a list', call.=FALSE)
       } else {
         if (obj$verbose) {
-          cat('setting finalEnvir option to:\n')
-          print(options$finalEnvir)
+          cat('setting finalArgs option to:\n')
+          print(options$finalArgs)
         }
-        finalEnvir <- options$finalEnvir
+        finalArgs <- options$finalArgs
+      }
+    }
+
+    if (!is.null(options$profile)) {
+      if (!is.logical(options$profile) || length(options$profile) != 1) {
+        warning('profile must be a logical value', call.=FALSE)
+      } else {
+        if (obj$verbose)
+          cat(sprintf('setting profile option to %s\n', options$profile))
+        profile <- options$profile
       }
     }
   }
@@ -183,7 +195,7 @@ doMPI <- function(obj, expr, envir, data) {
 
   # execute the tasks
   master(cl, expr, it, exportenv, obj$packages, obj$verbose, chunkSize, info,
-         initEnvir, initArgs, finalEnvir, finalArgs)
+         initEnvir, initArgs, finalEnvir, finalArgs, profile)
 
   # check for errors
   errorValue <- getErrorValue(it)

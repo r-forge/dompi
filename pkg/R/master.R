@@ -46,7 +46,11 @@
 #
 
 master <- function(cl, expr, it, envir, packages, verbose, chunkSize, info,
-                   initEnvir, initArgs, finalEnvir, finalArgs) {
+                   initEnvir, initArgs, finalEnvir, finalArgs, profile) {
+  # start profiling the foreach execution
+  # XXX should require profiling to be enabled
+  prof <- startnode('master')
+
   # choose a random id for this job for sanity checking
   jid <- sample(1000000, 1)
 
@@ -69,9 +73,13 @@ master <- function(cl, expr, it, envir, packages, verbose, chunkSize, info,
   # broadcast the execution environment to the cluster workers
   if (verbose)
     cat(sprintf('broadcasting data to cluster workers for job id %d\n', jid))
+
+  bcastprof <- startnode('bcastSendToCluster', prof)
   bcastSendToCluster(cl, envir)
+  finishnode(bcastprof)
 
   submitTaskChunk <- function(workerid, tid) {
+    sprof <- startnode(paste('submitTaskChunk', workerid), prof)
     argslist <- as.list(truncate(it, chunkSize))
     numtasks <- length(argslist)
     if (numtasks > 0) {
@@ -79,17 +87,21 @@ master <- function(cl, expr, it, envir, packages, verbose, chunkSize, info,
                         jid=jid, jobcomplete=FALSE)
       sendToWorker(cl, workerid, taskchunk)
     }
+    finishnode(sprof)
     numtasks
   }
 
   submitPoisonTask <- function(workerid) {
+    sprof <- startnode(paste('submitPoisonTask', workerid), prof)
     taskchunk <- list(argslist=NULL, numtasks=0, tid=-1, jid=jid,
                       jobcomplete=TRUE)
     sendToWorker(cl, workerid, taskchunk)
+    finishnode(sprof)
     0
   }
 
   processResultChunk <- function(resultchunk) {
+    sprof <- startnode(paste('processResultChunk', resultchunk$workerid), prof)
     if (!identical(resultchunk$jid, jid))
       stop(sprintf('error: job id mismatch: %s != %s', resultchunk, jid))
 
@@ -99,6 +111,7 @@ master <- function(cl, expr, it, envir, packages, verbose, chunkSize, info,
       accumulate(it, resultchunk$resultslist[[i]], tid)
       tid <- tid + 1
     }
+    finishnode(sprof)
   }
 
   moretasks <- TRUE  # are there more tasks to be submitted?
@@ -137,7 +150,10 @@ master <- function(cl, expr, it, envir, packages, verbose, chunkSize, info,
   while (moretasks) {
     # wait for a result from any worker
     if (verbose) cat('waiting for task results from any worker...\n')
+    rprof <- startnode('recvFromAnyWorker', prof)
     resultchunk <- recvFromAnyWorker(cl)
+    finishnode(rprof, newlabel=paste('recvFromAnyWorker', resultchunk$workerid))
+
     returned <- returned + 1
     if (verbose) {
       cat(sprintf('got task results %d from worker %d\n',
@@ -162,7 +178,10 @@ master <- function(cl, expr, it, envir, packages, verbose, chunkSize, info,
   while (returned < submitted) {
     # wait for a resultchunk from any worker
     if (verbose) cat('waiting for task results from any worker...\n')
+    rprof <- startnode('recvFromAnyWorker', prof)
     resultchunk <- recvFromAnyWorker(cl)
+    finishnode(rprof, newlabel=paste('recvFromAnyWorker', resultchunk$workerid))
+
     returned <- returned + 1
     if (verbose) {
       cat(sprintf('got task results %d from worker %d\n',
@@ -173,6 +192,12 @@ master <- function(cl, expr, it, envir, packages, verbose, chunkSize, info,
     submitPoisonTask(resultchunk$workerid)
     processResultChunk(resultchunk)
   }
+
+  finishnode(prof)
+  if (profile)
+    displaynode(prof)
+
+  NULL
 }
 
 # this returns an iterator that returns no more than "n" values

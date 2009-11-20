@@ -113,7 +113,7 @@ startNWScluster <- function(count=length(nodelist), verbose=FALSE,
   obj
 }
 
-clusterSize.nwscluster <- function(cl) {
+clusterSize.nwscluster <- function(cl, ...) {
   workerCount(cl$sl)
 }
 
@@ -127,15 +127,15 @@ closeCluster.nwscluster <- function(cl, ...) {
 }
 
 # 
-bcastSendToCluster.nwscluster <- function(cl, robj) {
+bcastSendToCluster.nwscluster <- function(cl, robj, ...) {
   nwsStore(cl$ws, 'broadcast', robj)
 }
 
-sendToWorker.nwscluster <- function(cl, workerid, robj) {
+sendToWorker.nwscluster <- function(cl, workerid, robj, ...) {
   nwsStore(cl$ws, cl$wvars[workerid], robj)
 }
 
-recvFromAnyWorker.nwscluster <- function(cl) {
+recvFromAnyWorker.nwscluster <- function(cl, ...) {
   nwsFetch(cl$ws, 'master')
 }
 
@@ -152,14 +152,14 @@ openNWScluster <- function(ws, workerid) {
   obj
 }
 
-bcastRecvFromMaster.nwscluster <- function(cl) {
+bcastRecvFromMaster.nwscluster <- function(cl, ...) {
   cl$broadcast()
 }
 
-sendToMaster.nwscluster <- function(cl, robj) {
+sendToMaster.nwscluster <- function(cl, robj, ...) {
   nwsStore(cl$ws, 'master', robj)
 }
 
-recvFromMaster.nwscluster <- function(cl) {
+recvFromMaster.nwscluster <- function(cl, ...) {
   nwsFetch(cl$ws, cl$wvar)
 }
