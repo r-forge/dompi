@@ -1,7 +1,6 @@
 TODO:
 
-- Need to benchmark doMPI against doSNOW, perhaps doing a parallel
-  randomForest.  I'd like to know if broadcasting really helps.
+- Need more benchmarks, perhaps doing a parallel randomForest.
 
 - Need a test suite.
 
