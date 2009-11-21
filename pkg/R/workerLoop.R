@@ -45,36 +45,83 @@ workerLoop <- function(cl, cores, verbose, out=stdout()) {
   logger <- mklogger(verbose)
   logger('starting worker loop: cores = %d', cores)
 
+  # initialize the state variables
+  injob <- FALSE
+  jid <- -999
+  err <- NULL
+  envir <- NULL
+
   # loop over jobs, which correspond to calls to foreach
-  while (!is.null(envir <- bcastRecvFromMaster(cl))) {
-    # get the job id from envir to sanity check tasks
-    jid <- get('.$jid', envir)
-
-    # perform job initialization
-    logger('initializing for new job %d', jid)
-    err <- jobInitialize(envir)
-
-    # wait for tasks until you get a poison task
-    logger('waiting for initial taskchunk...')
+  repeat {
+    logger('waiting for a taskchunk...')
     taskchunk <- recvFromMaster(cl)
+
+    # a NULL indicates the worker should shutdown and exit
+    if (is.null(taskchunk)) {
+      if (injob) {
+        logger('cleaning up after job %d before quiting', jid)
+        jobCleanup(envir)
+        envir <- NULL
+        injob <- FALSE
+      }
+      break
+    }
+
+    # pull information out of the taskchunk to start processing it
+    newenvir <- taskchunk$job
+    joblen <- taskchunk$joblen
+
+    # check if this is the start of a new job
+    if (joblen > 0 || !is.null(newenvir)) {
+      if (injob) {
+        # perform shutdown for previous job
+        logger('cleaning up after job %d before starting new job', jid)
+        jobCleanup(envir)
+        envir <- NULL
+      }
+      injob <- TRUE  # if we weren't in a job before, we are now
+
+      # receive the job environment from the master if necessary
+      envir <- if (joblen > 0) {
+        logger('job environment of length %d will be broadcast', joblen)
+        bcastRecvFromMaster(cl, datalen=joblen)
+      } else {
+        logger('job environment is piggy-backed')
+        unserialize(newenvir)
+      }
+
+      # get the job id from envir to sanity check tasks
+      jid <- get('.$jid', envir)
+
+      # perform initialization for new job
+      logger('initializing for new job %d', jid)
+      err <- jobInitialize(envir)
+    }
+
+    # sanity check the taskchunk now that any new job has been setup
     checkTask(taskchunk, jid)
 
-    while (! taskchunk$jobcomplete) {
+    # check if there are tasks to execute
+    if (taskchunk$numtasks > 0) {
+      # assert injob
+      # assert envir is not NULL
       logger('executing taskchunk %d containing %d tasks',
              taskchunk$tid, taskchunk$numtasks)
       resultchunk <- executeTaskChunk(cl$workerid, taskchunk, envir, err, cores)
 
       logger('returning results for taskchunk %d', taskchunk$tid)
       sendToMaster(cl, resultchunk)
-
-      logger('waiting for new taskchunk...')
-      taskchunk <- recvFromMaster(cl)
-      checkTask(taskchunk, jid)
     }
 
-    # perform job cleanup
-    logger('cleaning up after job', jid)
-    jobCleanup(envir)
+    # check if this is the end of a job
+    # note that the master is not required to ever set jobcomplete to TRUE
+    # but it can be useful to get a finalEnvir function to be executed sooner
+    if (injob && taskchunk$jobcomplete) {
+      logger('cleaning up after job %d because job complete', jid)
+      jobCleanup(envir)
+      envir <- NULL
+      injob <- FALSE
+    }
   }
 
   logger('shutting down')

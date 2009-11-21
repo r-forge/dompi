@@ -120,31 +120,25 @@ clusterSize.mpicluster <- function(cl, ...) {
 
 # mpicluster method for shutting down a cluster object
 closeCluster.mpicluster <- function(cl, ...) {
-  comm <- 1
-  mpi.bcast.Robj(NULL, 0, comm)
-  setMPIcluster(NULL)
-  invisible(mpi.comm.disconnect(comm))
-}
-
-closeCluster.nbmpicluster <- function(cl, ...) {
   tag <- 33  # worker tag
   comm <- 1
-  for (i in seq(length=cl$workerCount)) {
-    mpi.send.Robj(NULL, i, tag, comm)
+  for (workerid in seq(length=cl$workerCount)) {
+    mpi.send.Robj(NULL, workerid, tag, comm)
   }
   setMPIcluster(NULL)
   invisible(mpi.comm.disconnect(comm))
 }
 
-bcastSendToCluster.mpicluster <- function(cl, robj, ...) {
+bcastSendToCluster.mpicluster <- function(cl, data, ...) {
+  stopifnot(inherits(data, 'raw'))
   comm <- 1
-  mpi.bcast.Robj(robj, 0, comm)
+  mpi.bcast(x=data, type=4, rank=0, comm=comm)
 }
 
-bcastSendToCluster.nbmpicluster <- function(cl, robj, ...) {
+bcastSendToCluster.nbmpicluster <- function(cl, data, ...) {
+  stopifnot(inherits(data, 'raw'))
   tag <- 33  # worker tag
   comm <- 1
-  data <- Rmpi::.mpi.serialize(robj)
   for (dest in seq(length=cl$workerCount)) {
     mpi.send(x=data, type=4, dest=dest, tag=tag, comm=comm)
   }
@@ -180,15 +174,15 @@ openMPIcluster <- function(workerid, bcast) {
   obj
 }
 
-bcastRecvFromMaster.mpicluster <- function(cl, ...) {
+bcastRecvFromMaster.mpicluster <- function(cl, datalen, ...) {
   comm <- 1
-  mpi.bcast.Robj(NULL, 0, comm)
+  unserialize(mpi.bcast(x=raw(datalen), type=4, rank=0, comm=comm))
 }
 
-bcastRecvFromMaster.nbmpicluster <- function(cl, ...) {
+bcastRecvFromMaster.nbmpicluster <- function(cl, datalen, ...) {
   tag <- 33  # worker tag
   comm <- 1
-  mpi.recv.Robj(0, tag, comm)
+  unserialize(mpi.recv(x=raw(datalen), type=4, source=0, tag=tag, comm=comm))
 }
 
 sendToMaster.mpicluster <- function(cl, robj, ...) {

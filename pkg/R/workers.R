@@ -28,7 +28,7 @@ closeCluster <- function(cl, ...) {
   UseMethod('closeCluster')
 }
 
-bcastSendToCluster <- function(cl, robj, ...) {
+bcastSendToCluster <- function(cl, data, ...) {
   UseMethod('bcastSendToCluster')
 }
 
@@ -44,7 +44,7 @@ recvFromAnyWorker <- function(cl, ...) {
 # worker methods
 #################
 
-bcastRecvFromMaster <- function(cl, ...) {
+bcastRecvFromMaster <- function(cl, datalen, ...) {
   UseMethod('bcastRecvFromMaster')
 }
 

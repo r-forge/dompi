@@ -32,9 +32,9 @@
 #     tid          base task id in this task chunk
 #     argslist     list of lists of arguments to the worker function
 #     jid          id of the job associated with this task chunk
-#     jobcomplete  is this a null, "job is complete" task
-#                  if true, the workers wait for another job object
-#                  to be broadcast
+#     jobcomplete  indicates if job is complete
+#     job          a job environment
+#     joblen       length of a serialized job object to receive via bcast
 #
 #   resultchunk    a list with the following elements:
 #     numtasks     number of tasks results in this resultchunk
@@ -70,31 +70,40 @@ master <- function(cl, expr, it, envir, packages, verbose, chunkSize, info,
   assign('.$finalArgs', finalArgs, pos=envir)
   assign('.$jid', jid, pos=envir)
 
-  # broadcast the execution environment to the cluster workers
-  if (verbose)
-    cat(sprintf('broadcasting data to cluster workers for job id %d\n', jid))
+  # serialize the execution environment to prepare for bcast
+  xenvir <- tryCatch({
+    serialize(envir, NULL)
+  },
+  error=function(e) {
+    envsize <- object.size(envir)
+    warning(sprintf('Approximate size of execution environment: %d', envsize))
+    stop('Error serializing execution environment')
+  })
+  xenvirlen <- length(xenvir)
 
-  bcastprof <- startnode('bcastSendToCluster', prof)
-  bcastSendToCluster(cl, envir)
-  finishnode(bcastprof)
+  # remove envir so it can be garbage collected
+  rm(envir)
 
-  submitTaskChunk <- function(workerid, tid) {
+  # decide whether to piggy-back or broadcast the job environment
+  piggy <- xenvirlen < 10000
+
+  submitTaskChunk <- function(workerid, tid, job, joblen) {
     sprof <- startnode(paste('submitTaskChunk', workerid), prof)
     argslist <- as.list(truncate(it, chunkSize))
     numtasks <- length(argslist)
     if (numtasks > 0) {
-      taskchunk <- list(argslist=argslist, numtasks=numtasks, tid=tid,
-                        jid=jid, jobcomplete=FALSE)
+      taskchunk <- list(argslist=argslist, numtasks=numtasks, tid=tid, jid=jid,
+                        jobcomplete=FALSE, job=job, joblen=joblen)
       sendToWorker(cl, workerid, taskchunk)
     }
     finishnode(sprof)
     numtasks
   }
 
-  submitPoisonTask <- function(workerid) {
+  submitPoisonTask <- function(workerid, joblen) {
     sprof <- startnode(paste('submitPoisonTask', workerid), prof)
     taskchunk <- list(argslist=NULL, numtasks=0, tid=-1, jid=jid,
-                      jobcomplete=TRUE)
+                      jobcomplete=TRUE, job=NULL, joblen=joblen)
     sendToWorker(cl, workerid, taskchunk)
     finishnode(sprof)
     0
@@ -125,7 +134,17 @@ master <- function(cl, expr, it, envir, packages, verbose, chunkSize, info,
     workerid <- submitted + 1  # workerid ranges from 1 to clusterSize(cl)
     if (verbose)
       cat(sprintf('sending initial taskchunk to worker %d\n', workerid))
-    numtasks <- submitTaskChunk(workerid, tid)
+
+    numtasks <- if (piggy) {
+      if (verbose)
+        cat(sprintf('piggy-backing job data of length %d\n', xenvirlen))
+      submitTaskChunk(workerid, tid, xenvir, 0)
+    } else {
+      if (verbose)
+        cat(sprintf('will broadcast job data of length %d\n', xenvirlen))
+      submitTaskChunk(workerid, tid, NULL, xenvirlen)
+    }
+
     if (numtasks > 0) {
       tid <- tid + numtasks
       submitted <- submitted + 1
@@ -143,8 +162,21 @@ master <- function(cl, expr, it, envir, packages, verbose, chunkSize, info,
     i <- i + 1
     if (verbose)
       cat(sprintf('sending initial poison task to worker %d\n', i))
-    submitPoisonTask(i)
+    submitPoisonTask(i, if (piggy) 0 else xenvirlen)
   }
+
+  if (!piggy) {
+    # broadcast the execution environment to the cluster workers
+    if (verbose)
+      cat(sprintf('broadcasting data to cluster workers for job id %d\n', jid))
+
+    bcastprof <- startnode('bcastSendToCluster', prof)
+    bcastSendToCluster(cl, xenvir)
+    finishnode(bcastprof)
+  }
+
+  # remove xenvir so it can be garbage collected
+  rm(xenvir)
 
   # wait for results, and submit new tasks to the workers that return them
   while (moretasks) {
@@ -161,13 +193,13 @@ master <- function(cl, expr, it, envir, packages, verbose, chunkSize, info,
     }
 
     # submit another taskchunk for the worker before processing the result
-    numtasks <- submitTaskChunk(resultchunk$workerid, tid)
+    numtasks <- submitTaskChunk(resultchunk$workerid, tid, NULL, 0)
     if (numtasks > 0) {
       tid <- tid + numtasks
       submitted <- submitted + 1
     } else {
       # we didn't submit a real task, so submit a poison task
-      submitPoisonTask(resultchunk$workerid)
+      submitPoisonTask(resultchunk$workerid, 0)
       moretasks <- FALSE
     }
 
@@ -189,7 +221,7 @@ master <- function(cl, expr, it, envir, packages, verbose, chunkSize, info,
     }
 
     # submit a poison task and then process the resultchunk
-    submitPoisonTask(resultchunk$workerid)
+    submitPoisonTask(resultchunk$workerid, 0)
     processResultChunk(resultchunk)
   }
 

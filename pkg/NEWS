@@ -1,6 +1,9 @@
 NEWS/ChangeLog for doMPI
 ------------------------
 
+0.1-2   2009-11-XX
+    o	rewrote MPI broadcast support to be more efficient
+
 0.1-1	2009-11-20
     o	added sanity checks on the way the program is executed
     o	added backend-specific profile option

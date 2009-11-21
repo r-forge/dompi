@@ -120,15 +120,17 @@ clusterSize.nwscluster <- function(cl, ...) {
 # nwscluster method for shutting down a cluster object
 closeCluster.nwscluster <- function(cl, ...) {
   # I'm being a bit over zealous for now
-  nwsStore(cl$ws, 'broadcast', NULL)
+  for (wvar in cl$wvars) {
+    nwsStore(cl$ws, wvar, NULL)
+  }
   results <- waitSleigh(cl$sp)
   stopSleigh(cl$sl)
   invisible(results)  # might come in handy
 }
 
 # 
-bcastSendToCluster.nwscluster <- function(cl, robj, ...) {
-  nwsStore(cl$ws, 'broadcast', robj)
+bcastSendToCluster.nwscluster <- function(cl, data, ...) {
+  nwsStore(cl$ws, 'broadcast', data)
 }
 
 sendToWorker.nwscluster <- function(cl, workerid, robj, ...) {
@@ -152,7 +154,7 @@ openNWScluster <- function(ws, workerid) {
   obj
 }
 
-bcastRecvFromMaster.nwscluster <- function(cl, ...) {
+bcastRecvFromMaster.nwscluster <- function(cl, datalen, ...) {
   cl$broadcast()
 }
 
