@@ -130,18 +130,19 @@ closeCluster.mpicluster <- function(cl, ...) {
 }
 
 bcastSendToCluster.mpicluster <- function(cl, data, ...) {
-  stopifnot(inherits(data, 'raw'))
   comm <- 1
-  mpi.bcast(x=data, type=4, rank=0, comm=comm)
+  mpi.bcast(data, 4, 0, comm)
 }
 
 bcastSendToCluster.nbmpicluster <- function(cl, data, ...) {
-  stopifnot(inherits(data, 'raw'))
-  tag <- 33  # worker tag
-  comm <- 1
-  for (dest in seq(length=cl$workerCount)) {
-    mpi.send(x=data, type=4, dest=dest, tag=tag, comm=comm)
-  }
+  tag <- 33L  # worker tag
+  comm <- 1L
+
+  ## I was using the following in the for-loop:
+  # mpi.send(data, 4, dest, tag, comm)
+
+  for (dest in seq(length=cl$workerCount))
+    .Call("mpi_send", data, 4L, dest, tag, comm, PACKAGE='Rmpi')
 }
 
 sendToWorker.mpicluster <- function(cl, workerid, robj, ...) {
@@ -176,13 +177,13 @@ openMPIcluster <- function(workerid, bcast) {
 
 bcastRecvFromMaster.mpicluster <- function(cl, datalen, ...) {
   comm <- 1
-  unserialize(mpi.bcast(x=raw(datalen), type=4, rank=0, comm=comm))
+  unserialize(mpi.bcast(raw(datalen), 4, 0, comm))
 }
 
 bcastRecvFromMaster.nbmpicluster <- function(cl, datalen, ...) {
   tag <- 33  # worker tag
   comm <- 1
-  unserialize(mpi.recv(x=raw(datalen), type=4, source=0, tag=tag, comm=comm))
+  unserialize(mpi.recv(raw(datalen), 4, 0, tag, comm))
 }
 
 sendToMaster.mpicluster <- function(cl, robj, ...) {

@@ -70,31 +70,27 @@ master <- function(cl, expr, it, envir, packages, verbose, chunkSize, info,
   assign('.$finalArgs', finalArgs, pos=envir)
   assign('.$jid', jid, pos=envir)
 
-  # serialize the execution environment to prepare for bcast
-  xenvir <- tryCatch({
-    serialize(envir, NULL)
-  },
-  error=function(e) {
-    envsize <- object.size(envir)
-    warning(sprintf('Approximate size of execution environment: %d', envsize))
-    stop('Error serializing execution environment')
-  })
-  xenvirlen <- length(xenvir)
+  # if forcing piggy-backing, don't serialize the job environment twice
+  FORCEPIGGY <- FALSE
+  if (FORCEPIGGY) {
+    piggy <- TRUE  # XXX for testing
+  } else {
+    # serialize the execution environment to prepare for bcast
+    xenvir <- serialize(envir, NULL)
+    xenvirlen <- length(xenvir)
 
-  # remove envir so it can be garbage collected
-  rm(envir)
-
-  # decide whether to piggy-back or broadcast the job environment
-  piggy <- xenvirlen < 10000
+    # decide whether to piggy-back or broadcast the job environment
+    piggy <- xenvirlen < 100  # XXX for testing: mostly force broadcasting
+  }
 
   submitTaskChunk <- function(workerid, tid, job, joblen) {
     sprof <- startnode(paste('submitTaskChunk', workerid), prof)
     argslist <- as.list(truncate(it, chunkSize))
     numtasks <- length(argslist)
     if (numtasks > 0) {
-      taskchunk <- list(argslist=argslist, numtasks=numtasks, tid=tid, jid=jid,
-                        jobcomplete=FALSE, job=job, joblen=joblen)
-      sendToWorker(cl, workerid, taskchunk)
+      sendToWorker(cl, workerid, 
+                   list(argslist=argslist, numtasks=numtasks, tid=tid, jid=jid,
+                        jobcomplete=FALSE, job=job, joblen=joblen))
     }
     finishnode(sprof)
     numtasks
@@ -102,9 +98,9 @@ master <- function(cl, expr, it, envir, packages, verbose, chunkSize, info,
 
   submitPoisonTask <- function(workerid, joblen) {
     sprof <- startnode(paste('submitPoisonTask', workerid), prof)
-    taskchunk <- list(argslist=NULL, numtasks=0, tid=-1, jid=jid,
-                      jobcomplete=TRUE, job=NULL, joblen=joblen)
-    sendToWorker(cl, workerid, taskchunk)
+    sendToWorker(cl, workerid,
+                 list(argslist=NULL, numtasks=0, tid=-1, jid=jid,
+                      jobcomplete=TRUE, job=NULL, joblen=joblen))
     finishnode(sprof)
     0
   }
@@ -137,8 +133,8 @@ master <- function(cl, expr, it, envir, packages, verbose, chunkSize, info,
 
     numtasks <- if (piggy) {
       if (verbose)
-        cat(sprintf('piggy-backing job data of length %d\n', xenvirlen))
-      submitTaskChunk(workerid, tid, xenvir, 0)
+        cat('piggy-backing job data\n')
+      submitTaskChunk(workerid, tid, envir, 0)
     } else {
       if (verbose)
         cat(sprintf('will broadcast job data of length %d\n', xenvirlen))
@@ -176,7 +172,9 @@ master <- function(cl, expr, it, envir, packages, verbose, chunkSize, info,
   }
 
   # remove xenvir so it can be garbage collected
-  rm(xenvir)
+  if (exists('xenvir', inherits=FALSE)) {
+    rm(xenvir)
+  }
 
   # wait for results, and submit new tasks to the workers that return them
   while (moretasks) {

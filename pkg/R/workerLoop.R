@@ -67,12 +67,8 @@ workerLoop <- function(cl, cores, verbose, out=stdout()) {
       break
     }
 
-    # pull information out of the taskchunk to start processing it
-    newenvir <- taskchunk$job
-    joblen <- taskchunk$joblen
-
     # check if this is the start of a new job
-    if (joblen > 0 || !is.null(newenvir)) {
+    if (taskchunk$joblen > 0 || !is.null(taskchunk$job)) {
       if (injob) {
         # perform shutdown for previous job
         logger('cleaning up after job %d before starting new job', jid)
@@ -82,12 +78,13 @@ workerLoop <- function(cl, cores, verbose, out=stdout()) {
       injob <- TRUE  # if we weren't in a job before, we are now
 
       # receive the job environment from the master if necessary
-      envir <- if (joblen > 0) {
-        logger('job environment of length %d will be broadcast', joblen)
-        bcastRecvFromMaster(cl, datalen=joblen)
+      envir <- if (taskchunk$joblen > 0) {
+        logger('job environment of length %d will be broadcast',
+               taskchunk$joblen)
+        bcastRecvFromMaster(cl, datalen=taskchunk$joblen)
       } else {
         logger('job environment is piggy-backed')
-        unserialize(newenvir)
+        taskchunk$job
       }
 
       # get the job id from envir to sanity check tasks
