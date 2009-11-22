@@ -108,7 +108,7 @@ master <- function(cl, expr, it, envir, packages, verbose, chunkSize, info,
   processResultChunk <- function(resultchunk) {
     sprof <- startnode(paste('processResultChunk', resultchunk$workerid), prof)
     if (!identical(resultchunk$jid, jid))
-      stop(sprintf('error: job id mismatch: %s != %s', resultchunk, jid))
+      stop(sprintf('error: job id mismatch: %s != %s', resultchunk$jid, jid))
 
     tid <- resultchunk$tid
 
