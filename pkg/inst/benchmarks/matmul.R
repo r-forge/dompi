@@ -24,7 +24,13 @@ matmul <- function(x, y, profile=FALSE) {
 x <- matrix(rnorm(m * n), m, n)
 y <- matrix(rnorm(n * p), n, p)
 
-etime <- system.time(z <- matmul(x, y, profile))['elapsed']
+# gc(FALSE)
+# Rprof()
+stime <- proc.time()[3]
+z <- matmul(x, y, profile)
+etime <- proc.time()[3] - stime
+# Rprof(NULL)
+
 cat(sprintf('Time for matrix multiply with %s and %d workers: %f\n',
             getDoParName(), getDoParWorkers(), etime))
 
