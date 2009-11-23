@@ -44,7 +44,8 @@ doMPI <- function(obj, expr, envir, data) {
   finalEnvir <- NULL
   finalArgs <- NULL
   profile <- FALSE
-  forcepiggyback <- FALSE
+  bcastThreshold <- 800  # XXX not sure of a good default value
+  forcePiggyback <- FALSE
 
   if (!inherits(obj, 'foreach'))
     stop('obj must be a foreach object')
@@ -57,7 +58,7 @@ doMPI <- function(obj, expr, envir, data) {
     nms <- names(options)
     recog <- nms %in% c('chunkSize', 'info',
                         'initEnvir', 'initArgs', 'finalEnvir', 'finalArgs',
-                        'profile', 'forcepiggyback')
+                        'profile', 'bcastThreshold', 'forcePiggyback')
     if (any(!recog))
       warning(sprintf('ignoring unrecognized mpi option(s): %s',
                       paste(nms[!recog], collapse=', ')), call.=FALSE)
@@ -142,13 +143,25 @@ doMPI <- function(obj, expr, envir, data) {
       }
     }
 
-    if (!is.null(options$forcepiggyback)) {
-      if (!is.logical(options$forcepiggyback) || length(options$forcepiggyback) != 1) {
-        warning('forcepiggyback must be a logical value', call.=FALSE)
+    if (!is.null(options$bcastThreshold)) {
+      if (!is.numeric(options$bcastThreshold) ||
+          length(options$bcastThreshold) != 1) {
+        warning('bcastThreshold must be a numeric value', call.=FALSE)
       } else {
         if (obj$verbose)
-          cat(sprintf('setting forcepiggyback option to %s\n', options$forcepiggyback))
-        forcepiggyback <- options$forcepiggyback
+          cat(sprintf('setting bcastThreshold option to %d\n',
+                      options$bcastThreshold))
+        bcastThreshold <- options$bcastThreshold
+      }
+    }
+
+    if (!is.null(options$forcePiggyback)) {
+      if (!is.logical(options$forcePiggyback) || length(options$forcePiggyback) != 1) {
+        warning('forcePiggyback must be a logical value', call.=FALSE)
+      } else {
+        if (obj$verbose)
+          cat(sprintf('setting forcePiggyback option to %s\n', options$forcePiggyback))
+        forcePiggyback <- options$forcePiggyback
       }
     }
   }
@@ -206,7 +219,8 @@ doMPI <- function(obj, expr, envir, data) {
 
   # execute the tasks
   master(cl, expr, it, exportenv, obj$packages, obj$verbose, chunkSize, info,
-         initEnvir, initArgs, finalEnvir, finalArgs, profile, forcepiggyback)
+         initEnvir, initArgs, finalEnvir, finalArgs, profile, bcastThreshold,
+         forcePiggyback)
 
   # check for errors
   errorValue <- getErrorValue(it)

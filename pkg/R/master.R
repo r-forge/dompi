@@ -47,7 +47,7 @@
 
 master <- function(cl, expr, it, envir, packages, verbose, chunkSize, info,
                    initEnvir, initArgs, finalEnvir, finalArgs, profile,
-                   forcepiggyback) {
+                   bcastThreshold, forcePiggyback) {
   # start profiling the foreach execution
   # XXX should require profiling to be enabled
   prof <- startnode('master')
@@ -72,7 +72,7 @@ master <- function(cl, expr, it, envir, packages, verbose, chunkSize, info,
   assign('.$jid', jid, pos=envir)
 
   # if forcing piggy-backing, don't serialize the job environment twice
-  if (forcepiggyback) {
+  if (forcePiggyback) {
     piggy <- TRUE
   } else {
     # serialize the execution environment to prepare for bcast
@@ -80,7 +80,7 @@ master <- function(cl, expr, it, envir, packages, verbose, chunkSize, info,
     xenvirlen <- length(xenvir)
 
     # decide whether to piggy-back or broadcast the job environment
-    piggy <- xenvirlen < 800  # XXX not sure of a good default value
+    piggy <- xenvirlen < bcastThreshold
   }
 
   submitTaskChunk <- function(workerid, tid, job, joblen) {

@@ -26,7 +26,8 @@ There are several backend-specific options that can be specified when using
 \code{finalEnvir} \tab A function to be called on each worker after executing all tasks\cr
 \code{finalArgs} \tab List of extra arguments to pass to the \code{finalEnvir} function\cr
 \code{profile} \tab Display profiling information from the master's point of view\cr
-\code{forcepiggyback} \tab Always piggy-back job environment with first task to each worker\cr
+\code{bcastThreshold} \tab Used to decide whether to piggy-back or broadcast job data\cr
+\code{forcePiggyback} \tab Always piggy-back job environment with first task to each worker\cr
 }
 
 The \code{chunkSize} option is particularly important, since it can be
@@ -57,7 +58,15 @@ end of the \%dopar\% execution.  It basically lists the time spent
 sending tasks to the workers and retrieving results from them.  The
 default value is \code{FALSE}.
 
-The \code{forcepiggyback} option is used to force the job data to be
+The \code{bcastThreshold} option is used to decide whether to piggy-back
+the job data, or broadcast it.  The job data is serialized, and if it is
+smaller than \code{bcastThreshold}, it is piggy-backed, otherwise, it is
+broadcast.  Note that if you want to force piggy-backing, you should use
+the \code{forcePiggyback}, rather than setting \code{bcastThreshold} to
+a very large value.  That avoids serializing the job data twice, which
+can be time consuming.
+
+The \code{forcePiggyback} option is used to force the job data to be
 ``piggy-backed'' with the first task to each of the workers.  If the
 value is \code{FALSE}, the data may still be piggy-backed, but it is not
 guaranteed.  In general, the job data is only piggy-backed if it is
