@@ -46,7 +46,8 @@
 #
 
 master <- function(cl, expr, it, envir, packages, verbose, chunkSize, info,
-                   initEnvir, initArgs, finalEnvir, finalArgs, profile) {
+                   initEnvir, initArgs, finalEnvir, finalArgs, profile,
+                   forcepiggyback) {
   # start profiling the foreach execution
   # XXX should require profiling to be enabled
   prof <- startnode('master')
@@ -71,8 +72,7 @@ master <- function(cl, expr, it, envir, packages, verbose, chunkSize, info,
   assign('.$jid', jid, pos=envir)
 
   # if forcing piggy-backing, don't serialize the job environment twice
-  FORCEPIGGY <- FALSE
-  if (FORCEPIGGY) {
+  if (forcepiggyback) {
     piggy <- TRUE
   } else {
     # serialize the execution environment to prepare for bcast

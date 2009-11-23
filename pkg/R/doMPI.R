@@ -44,6 +44,7 @@ doMPI <- function(obj, expr, envir, data) {
   finalEnvir <- NULL
   finalArgs <- NULL
   profile <- FALSE
+  forcepiggyback <- FALSE
 
   if (!inherits(obj, 'foreach'))
     stop('obj must be a foreach object')
@@ -56,7 +57,7 @@ doMPI <- function(obj, expr, envir, data) {
     nms <- names(options)
     recog <- nms %in% c('chunkSize', 'info',
                         'initEnvir', 'initArgs', 'finalEnvir', 'finalArgs',
-                        'profile')
+                        'profile', 'forcepiggyback')
     if (any(!recog))
       warning(sprintf('ignoring unrecognized mpi option(s): %s',
                       paste(nms[!recog], collapse=', ')), call.=FALSE)
@@ -140,6 +141,16 @@ doMPI <- function(obj, expr, envir, data) {
         profile <- options$profile
       }
     }
+
+    if (!is.null(options$forcepiggyback)) {
+      if (!is.logical(options$forcepiggyback) || length(options$forcepiggyback) != 1) {
+        warning('forcepiggyback must be a logical value', call.=FALSE)
+      } else {
+        if (obj$verbose)
+          cat(sprintf('setting forcepiggyback option to %s\n', options$forcepiggyback))
+        forcepiggyback <- options$forcepiggyback
+      }
+    }
   }
 
   # setup the parent environment by first attempting to create an environment
@@ -195,7 +206,7 @@ doMPI <- function(obj, expr, envir, data) {
 
   # execute the tasks
   master(cl, expr, it, exportenv, obj$packages, obj$verbose, chunkSize, info,
-         initEnvir, initArgs, finalEnvir, finalArgs, profile)
+         initEnvir, initArgs, finalEnvir, finalArgs, profile, forcepiggyback)
 
   # check for errors
   errorValue <- getErrorValue(it)
