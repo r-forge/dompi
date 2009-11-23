@@ -95,13 +95,13 @@ workerLoop <- function(cl, cores, verbose, out=stdout()) {
       err <- jobInitialize(envir)
     }
 
-    # sanity check the taskchunk now that any new job has been setup
-    checkTask(taskchunk, jid)
-
     # check if there are tasks to execute
     if (taskchunk$numtasks > 0) {
       # assert injob
       # assert envir is not NULL
+      # sanity check the taskchunk now that any new job has been setup
+      checkTask(taskchunk, jid)
+
       logger('executing taskchunk %d containing %d tasks',
              taskchunk$tid, taskchunk$numtasks)
       resultchunk <- executeTaskChunk(cl$workerid, taskchunk, envir, err, cores)
