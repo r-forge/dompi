@@ -25,13 +25,20 @@ There are several backend-specific options that can be specified when using
 \code{initArgs} \tab List of extra arguments to pass to the \code{initEnvir} function\cr
 \code{finalEnvir} \tab A function to be called on each worker after executing all tasks\cr
 \code{finalArgs} \tab List of extra arguments to pass to the \code{finalEnvir} function\cr
+\code{profile} \tab Display profiling information from the master's point of view\cr
+\code{forcepiggyback} \tab Always piggy-back job environment with first task to each worker\cr
 }
 
 The \code{chunkSize} option is particularly important, since it can be
 much more efficient to send more than one task at a time to the workers,
 particularly when the tasks execute quickly.  Also, it can allow the
 workers to execute those tasks in parallel using the \code{mclapply}
-function from the \code{multicore} package.
+function from the \code{multicore} package.  The default value is
+\code{1}.
+
+The \code{info} option is used to print general information that is
+specific to the \code{doMPI} backend.  This includes information on what
+variables are exported, for example.  The default value is \code{FALSE}.
 
 The \code{initEnvir} option is useful for preparing the workers to
 execute the subsequent tasks.  The execution environment is passed as
@@ -44,6 +51,17 @@ The \code{finalEnvir} option is useful for ``finalizing'' the execution
 environment.  It works pretty much the same as the \code{initEnvir}
 function, getting extra arguments from a list specified with the
 \code{finalArgs} option.
+
+The \code{profile} option is used to print profiling information at the
+end of the \%dopar\% execution.  It basically lists the time spent
+sending tasks to the workers and retrieving results from them.  The
+default value is \code{FALSE}.
+
+The \code{forcepiggyback} option is used to force the job data to be
+``piggy-backed'' with the first task to each of the workers.  If the
+value is \code{FALSE}, the data may still be piggy-backed, but it is not
+guaranteed.  In general, the job data is only piggy-backed if it is
+relatively small.  The default value is \code{FALSE}.
 
 Additional documentation is available on the following functions:
 

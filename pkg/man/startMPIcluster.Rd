@@ -24,7 +24,26 @@ startMPIcluster(count, verbose=FALSE, workdir=getwd(), logdir=workdir,
   mclapply, if a worker process is started on the local machine.
   Defaults to \code{TRUE}.}
   \item{bcast}{Indicates if MPI broadcast should be used to send
-  shared data to the workers.  Defaults to \code{TRUE}.}
+  shared ``job'' data to the workers.  If \code{FALSE} is specified, the
+  data is sent by separate messages to each worker, which is sometimes
+  faster than using a broadcast.  Defaults to \code{TRUE}.}
+}
+\note{
+The \code{startMPIcluster} function will return an MPI cluster object of
+different classes, depending on the \code{bcast} option.  This is
+because broadcasting is implemented as a method on the MPI cluster
+object, and that method is implemented differently in the different
+classes.
+
+Also note that the \code{bcast} option has no effect if the
+backend-specific \code{forcepiggyback} option is used with
+\code{foreach}, since ``piggy-backing'' is an altermative way to send
+the job data to the workers in separate messages.
+
+So there are currently three ways that the job data can be sent to the
+workers: piggy-backed with the first task to each worker, broadcast, or
+sent in separate messages.  Which method is best will presumably depend
+on your hardware and your MPI implementation.
 }
 \examples{
 \dontrun{
