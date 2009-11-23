@@ -73,14 +73,14 @@ master <- function(cl, expr, it, envir, packages, verbose, chunkSize, info,
   # if forcing piggy-backing, don't serialize the job environment twice
   FORCEPIGGY <- FALSE
   if (FORCEPIGGY) {
-    piggy <- TRUE  # XXX for testing
+    piggy <- TRUE
   } else {
     # serialize the execution environment to prepare for bcast
     xenvir <- serialize(envir, NULL)
     xenvirlen <- length(xenvir)
 
     # decide whether to piggy-back or broadcast the job environment
-    piggy <- xenvirlen < 100  # XXX for testing: mostly force broadcasting
+    piggy <- xenvirlen < 800  # XXX not sure of a good default value
   }
 
   submitTaskChunk <- function(workerid, tid, job, joblen) {
