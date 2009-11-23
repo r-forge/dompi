@@ -1,8 +1,10 @@
 library(doMPI)
 
-# create and register a doMPI cluster
-cl <- startMPIcluster(count=2)
-registerDoMPI(cl)
+# create and register a doMPI cluster if necessary
+if (!identical(getDoParName(), 'doMPI')) {
+  cl <- startMPIcluster(count=2)
+  registerDoMPI(cl)
+}
 
 # define the grid over which to compute the sinc function
 x <- seq(-20, 20, by=0.25)
@@ -15,7 +17,3 @@ v <- foreach(y=x, .combine="cbind") %dopar% {
 
 # display the results with a perspective plot
 persp(x, x, v)
-
-# shutdown the cluster and finalize MPI
-closeCluster(cl)
-mpi.finalize()
