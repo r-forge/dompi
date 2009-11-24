@@ -83,5 +83,9 @@ Additional documentation is available on the following functions:
 
 For a complete list of functions with individual help pages,
 use \code{library(help="doMPI")}.
+Use the command \code{vignette("doMPI")} to view the vignette entitled
+``Introduction to doMPI''.
+Also, there are a number of \code{doMPI} example scripts in the
+examples directory of the \code{doMPI} installation.
 }
 \keyword{package}
