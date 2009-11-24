@@ -1,5 +1,3 @@
-library(doMPI)
-
 # This example shows how to use the initEnvir option to initialize
 # the cluster workers.  This is necessary when the workers need to
 # use an object that can't be simply exported, such as connection
@@ -8,7 +6,12 @@ library(doMPI)
 # The function specified by the initEnvir option can be passed the
 # worker's execution environment, plus extra arguments specified
 # by the initArgs option.
-#
+
+library(doMPI)
+
+# Create and register an MPI cluster
+cl <- startMPIcluster(2)
+registerDoMPI(cl)
 
 # Create an output file that the workers can write to using
 # the variable "out"
@@ -27,10 +30,6 @@ finalEnvir <- function(envir) {
   close(envir$out)
 }
 
-# Create and register an MPI cluster
-cl <- startMPIcluster(2)
-registerDoMPI(cl)
-
 # Define a .combine function that throws away it's arguments
 trash <- function(...) NULL
 
@@ -44,6 +43,6 @@ foreach(i=1:10, .options.mpi=mpiopts,
   cat(sprintf('This is task number %d\n', i), file=out)
 }
 
-# Shut down the MPI cluster and quit
+# Shutdown the cluster and quit
 closeCluster(cl)
 mpi.quit()

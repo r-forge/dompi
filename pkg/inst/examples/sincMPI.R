@@ -1,21 +1,27 @@
+# This example is an R version of an example in "Getting Started with MATLAB",
+# on "Graphing the sinc function".  It's an interesting example of using
+# recycling in vector operations to write a clean, parallel version.
+# And it also makes a pretty picture, which is why there is also a demo
+# version of it included with doMPI.
+
 library(doMPI)
 
-# create and register a doMPI cluster
+# Create and register an MPI cluster
 cl <- startMPIcluster(2)
 registerDoMPI(cl)
 
-# define the grid over which to compute the sinc function
+# Define the grid over which to compute the sinc function
 x <- seq(-20, 20, by=0.25)
 
-# compute the sinc function in parallel
+# Compute the sinc function in parallel
 v <- foreach(y=x, .combine="cbind") %dopar% {
   r <- sqrt(x^2 + y^2) + .Machine$double.eps
   sin(r) / r
 }
 
-# display the results with a perspective plot
+# Display the results with a perspective plot
 persp(x, x, v)
 
-# shutdown the cluster and quit
+# Shutdown the cluster and quit
 closeCluster(cl)
 mpi.quit()

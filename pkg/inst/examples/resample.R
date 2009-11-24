@@ -1,7 +1,11 @@
 # This example shows how to do resampling using the "times"
-# convenience function.  Thanks to Daniel Kaplan for this technique.
+# convenience function.  I then show a slightly fancier version
+# using foreach with the ".final" argument to perform the
+# post processing.
+#
+# Thanks to Daniel Kaplan for this basic method of resampling, and for
+# inspiring the "times" function, as well as the foreach package itself.
 
-# This isn't worth doing in parallel, so I'm not going to bother
 library(foreach)
 
 # Define a simple function for resampling a data frame

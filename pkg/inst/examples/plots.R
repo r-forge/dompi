@@ -1,29 +1,35 @@
+# This example shows how to write a parallel program where the results
+# are a sequence of plots, stored as PNG files.  It's the sort of
+# example that you could run as a sequence batch jobs, but I think this
+# is much simpler, as well as more portable.
 #
-# Note: this example can fail on Mac OS X.  I get the following
-# error when starting remote workers with orterun:
+# Note: This example can fail on Mac OS X.  I get the following
+# error message when starting remote workers with orterun:
 #
 #  "On-demand launch of the Window Server is allowed for root user only."
 #
+# Presumably this is due to the use of the PNG device, but I haven't
+# tracked it down.
 
 library(doMPI)
 
-# create and register a doMPI cluster
+# Create and register an MPI cluster
 cl <- startMPIcluster(2)
 registerDoMPI(cl)
 
-# initialize variables
+# Initialize variables
 trials <- 10
 n <- nrow(iris)
 leaveout <- 2
 
-# define chunkSize so that each cluster worker gets a single "task chunk"
+# Define chunkSize so that each cluster worker gets a single "task chunk"
 chunkSize <- ceiling(trials / getDoParWorkers())
 mpiopts <- list(chunkSize=chunkSize)
 
-# define a .combine function that throws away the "results"
+# Define a .combine function that throws away the "results"
 trash <- function(...) NULL
 
-# create the PNG files in parallel
+# Create the PNG files in parallel
 foreach(i=icount(trials), .combine=trash, .multicombine=TRUE,
         .packages='randomForest', .options.mpi=mpiopts) %dopar% {
   d <- iris[sample(n, n - leaveout),]
@@ -34,6 +40,6 @@ foreach(i=icount(trials), .combine=trash, .multicombine=TRUE,
   NULL
 }
 
-# shutdown the cluster and quit
+# Shutdown the cluster and quit
 closeCluster(cl)
 mpi.quit()

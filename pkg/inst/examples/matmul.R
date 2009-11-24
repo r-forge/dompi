@@ -1,27 +1,35 @@
+# This example shows a very simple way of performing a simple,
+# parallel matrix multiply.  Of course, it's very inefficient,
+# since matrix multiplication is so fast on modern computers.
+# But it's something of a traditional in the parallel computing
+# world, and it shows how to use the "iter" method on a matrix
+# to iterate over block columns of the matrix "y".
+
 library(doMPI)
 
-# create and register a doMPI cluster
+# Create and register an MPI cluster
 cl <- startMPIcluster(count=3)
 registerDoMPI(cl)
 
-# define a parallel matrix multiple function
+# Define a parallel matrix multiple function
 matmul <- function(x, y) {
+  # one task per worker for maximum granularity, but it's still hopeless
   n <- ceiling(ncol(y) / getDoParWorkers())
   foreach(yc=iter(y, by='column', chunksize=n), .combine='cbind') %dopar% {
     x %*% yc
   }
 }
 
-# create some matrices
+# Create some matrices
 m <- 6; n <- 5; p <- 4
 x <- matrix(rnorm(m * n), m, n)
 y <- matrix(rnorm(n * p), n, p)
 
-# execute matmul and then display and check the result
+# Execute matmul and then display and check the result
 z <- matmul(x, y)
 print(z)
 print(identical(z, x %*% y))
 
-# shutdown the cluster and quit
+# Shutdown the cluster and quit
 closeCluster(cl)
 mpi.quit()

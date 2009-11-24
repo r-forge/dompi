@@ -25,6 +25,6 @@ ppi <- function(n=1000) {
 # Execute the "parallel pi" function and print the result
 print(ppi())
 
-# Shut down the MPI cluster and quit
+# Shutdown the cluster and quit
 closeCluster(cl)
 mpi.quit()
