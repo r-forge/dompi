@@ -48,7 +48,7 @@ variables in the environment, for example.  If \code{initArgs} is
 defined, the contents of the list will be passed as arguments to the
 \code{initEnvir} function after the environment object.
 
-The \code{finalEnvir} option is useful for ``finalizing'' the execution
+The \code{finalEnvir} option is useful for \dQuote{finalizing} the execution
 environment.  It works pretty much the same as the \code{initEnvir}
 function, getting extra arguments from a list specified with the
 \code{finalArgs} option.
@@ -67,7 +67,7 @@ a very large value.  That avoids serializing the job data twice, which
 can be time consuming.
 
 The \code{forcePiggyback} option is used to force the job data to be
-``piggy-backed'' with the first task to each of the workers.  If the
+\dQuote{piggy-backed} with the first task to each of the workers.  If the
 value is \code{FALSE}, the data may still be piggy-backed, but it is not
 guaranteed.  In general, the job data is only piggy-backed if it is
 relatively small.  The default value is \code{FALSE}.
@@ -84,7 +84,7 @@ Additional documentation is available on the following functions:
 For a complete list of functions with individual help pages,
 use \code{library(help="doMPI")}.
 Use the command \code{vignette("doMPI")} to view the vignette entitled
-``Introduction to doMPI''.
+\dQuote{Introduction to doMPI}.
 Also, there are a number of \code{doMPI} example scripts in the
 examples directory of the \code{doMPI} installation.
 }
