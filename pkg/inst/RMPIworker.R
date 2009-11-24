@@ -175,7 +175,8 @@ local({
   }
 
   # this is where all the work is done
-  cl <- doMPI:::openMPIcluster(workerid, bcast)
+  cl <- doMPI:::openMPIcluster(bcast, comm=comm, workerid=workerid,
+                               verbose=verbose)
   doMPI:::workerLoop(cl, cores, verbose)
 
   # shutdown MPI
