@@ -11,7 +11,7 @@ library(doMPI)
 cl <- startMPIcluster(count=3)
 registerDoMPI(cl)
 
-# Define a parallel matrix multiple function
+# Define a parallel matrix multiply function
 matmul <- function(x, y) {
   # one task per worker for maximum granularity, but it's still hopeless
   n <- ceiling(ncol(y) / getDoParWorkers())
