@@ -47,11 +47,11 @@ startMPIcluster <- function(count, verbose=FALSE, workdir=getwd(),
     if (missing(count)) {
       count <- mpi.comm.size(0) - 1
     } else if (count != mpi.comm.size(0) - 1) {
-      # XXX a bit confusing
+      # XXX error message could be improved
       stop(sprintf("an MPI cluster of size %d was started", mpi.comm.size(0) - 1))
     }
 
-    cl <- list(comm=0L, workerCount=count, workerid=0, verbose=verbose)
+    cl <- list(comm=0, workerCount=count, workerid=0, verbose=verbose)
     class(cl) <- if (bcast) {
       c("mpicluster", "dompicluster")
     } else {
@@ -60,8 +60,8 @@ startMPIcluster <- function(count, verbose=FALSE, workdir=getwd(),
     setMPIcluster(cl)
     cl
   } else {
-    comm <- 1L
-    intercomm <- 2L
+    comm <- 1
+    intercomm <- 2
     if (mpi.comm.size(comm) > 0) {
       stop(paste("an MPI cluster already exists:", comm))
     }
@@ -130,7 +130,7 @@ clusterSize.mpicluster <- function(cl, ...) {
 
 # mpicluster method for shutting down a cluster object
 closeCluster.mpicluster <- function(cl, ...) {
-  tag <- 33  # worker tag
+  tag <- 11  # worker tag
   for (workerid in seq(length=cl$workerCount)) {
     mpi.send.Robj(NULL, workerid, tag, cl$comm)
   }
@@ -149,22 +149,19 @@ bcastSendToCluster.mpicluster <- function(cl, data, ...) {
 }
 
 bcastSendToCluster.nbmpicluster <- function(cl, data, ...) {
-  tag <- 33L  # worker tag
-
-  ## I was using the following in the for-loop:
-  # mpi.send(data, 4, dest, tag, cl$comm)
-
-  for (dest in seq(length=cl$workerCount))
-    .Call("mpi_send", data, 4L, dest, tag, cl$comm, PACKAGE='Rmpi')
+  tag <- 11  # worker tag
+  for (dest in seq(length=cl$workerCount)) {
+    mpi.send(data, 4, dest, tag, cl$comm)
+  }
 }
 
 sendToWorker.mpicluster <- function(cl, workerid, robj, ...) {
-  tag <- 33  # worker tag
+  tag <- 11  # worker tag
   mpi.send.Robj(robj, workerid, tag, cl$comm)
 }
 
 recvFromAnyWorker.mpicluster <- function(cl, ...) {
-  tag <- 22  # master tag
+  tag <- 10  # master tag
   status <- 0
   mpi.probe(mpi.any.source(), tag, cl$comm, status)
   srctag <- mpi.get.sourcetag(status)
@@ -194,16 +191,16 @@ bcastRecvFromMaster.mpicluster <- function(cl, datalen, ...) {
 }
 
 bcastRecvFromMaster.nbmpicluster <- function(cl, datalen, ...) {
-  tag <- 33  # worker tag
+  tag <- 11  # worker tag
   unserialize(mpi.recv(raw(datalen), 4, 0, tag, cl$comm))
 }
 
 sendToMaster.mpicluster <- function(cl, robj, ...) {
-  tag <- 22  # master tag
+  tag <- 10  # master tag
   mpi.send.Robj(robj, 0, tag, cl$comm)
 }
 
 recvFromMaster.mpicluster <- function(cl, ...) {
-  tag <- 33  # worker tag
+  tag <- 11  # worker tag
   mpi.recv.Robj(0, tag, cl$comm)
 }
