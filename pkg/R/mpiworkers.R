@@ -173,9 +173,8 @@ recvFromAnyWorker.mpicluster <- function(cl, ...) {
 ############################
 
 # this is called by the cluster workers to create an mpi cluster object
-openMPIcluster <- function(bcast, comm, workerid=mpi.comm.rank(comm),
+openMPIcluster <- function(bcast=TRUE, comm=0, workerid=mpi.comm.rank(comm),
                            verbose=FALSE) {
-  # XXX need to think about this
   obj <- list(comm=comm, workerCount=mpi.comm.size(comm),
               workerid=workerid, verbose=verbose)
   class(obj) <- if (bcast) {

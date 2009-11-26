@@ -102,7 +102,7 @@ startNWScluster <- function(count=length(nodelist), verbose=FALSE,
 
     cl <- doMPI:::openNWScluster(ws, rank)
 
-    doMPI:::workerLoop(cl, cores, verbose)
+    workerLoop(cl, cores, verbose)
   }
   masternode <- Sys.info()[['nodename']]
   sp <- eachWorker(sl, runWorkerLoop, verbose, maxcores,

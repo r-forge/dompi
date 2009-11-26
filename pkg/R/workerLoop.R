@@ -41,7 +41,7 @@ mklogger <- function(verbose, out=stdout()) {
 }
 
 # toplevel worker function
-workerLoop <- function(cl, cores, verbose, out=stdout()) {
+workerLoop <- function(cl, cores=1, verbose=FALSE) {
   logger <- mklogger(verbose)
   logger('starting worker loop: cores = %d', cores)
 

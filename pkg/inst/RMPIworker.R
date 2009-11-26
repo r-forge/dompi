@@ -117,7 +117,7 @@ local({
   stopifnot(length(outfile) == 1)
 
   # redirect stdout, stderr, warnings, etc, to outfile
-  doMPI:::sinkWorkerOutput(outfile)
+  sinkWorkerOutput(outfile)
 
   procname <- mpi.get.processor.name()
   nodename <- Sys.info()[['nodename']]
@@ -175,9 +175,9 @@ local({
   }
 
   # this is where all the work is done
-  cl <- doMPI:::openMPIcluster(bcast, comm=comm, workerid=workerid,
-                               verbose=verbose)
-  doMPI:::workerLoop(cl, cores, verbose)
+  cl <- openMPIcluster(bcast=bcast, comm=comm, workerid=workerid,
+                       verbose=verbose)
+  workerLoop(cl, cores, verbose)
 
   # shutdown MPI
   mpi.comm.disconnect(comm)

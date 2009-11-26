@@ -84,9 +84,9 @@ main <- function(args) {
   if (mpi.comm.rank(0) > 0) {
     # This is a cluster worker
     outfile <- if (verbose) wfile else "/dev/null"
-    doMPI:::sinkWorkerOutput(outfile)
-    cl <- doMPI:::openMPIcluster(bcast, comm=0L, verbose=verbose)
-    doMPI:::workerLoop(cl, cores=cores, verbose=verbose)
+    sinkWorkerOutput(outfile)
+    cl <- openMPIcluster(bcast=bcast, verbose=verbose)
+    workerLoop(cl, cores=cores, verbose=verbose)
   } else {
     if (forcePiggyback) {
       cat("Broadcasting is disabled: job data will always be piggy-backed\n")
