@@ -85,7 +85,7 @@ main <- function(args) {
     # This is a cluster worker
     outfile <- if (verbose) wfile else "/dev/null"
     sinkWorkerOutput(outfile)
-    cl <- openMPIcluster(bcast=bcast, verbose=verbose)
+    cl <- openMPIcluster(bcast=bcast)
     workerLoop(cl, cores=cores, verbose=verbose)
   } else {
     if (forcePiggyback) {
