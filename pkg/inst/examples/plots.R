@@ -14,7 +14,7 @@
 suppressMessages(library(doMPI))
 
 # Create and register an MPI cluster
-cl <- startMPIcluster(count=2)
+cl <- startMPIcluster()
 registerDoMPI(cl)
 
 # Initialize variables

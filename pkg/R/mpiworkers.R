@@ -125,11 +125,7 @@ startMPIcluster <- function(count, verbose=FALSE, workdir=getwd(),
     }
 
     if (missing(count)) {
-      if (universesize > 1) {
-        count <- universesize - 1
-      } else {
-        stop('count must be specified in this case')
-      }
+      count <- if (universesize > 1) universesize - 1 else 2
     }
 
     if (verbose) {

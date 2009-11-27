@@ -21,7 +21,6 @@ suppressMessages(library(getopt))
 main <- function(args) {
   # Define the command line options
   spec <- matrix(c('verbose',    'v', '0', 'logical',
-                   'count',      'n', '1', 'integer',
                    'profile',    'p', '0', 'logical',
                    'emulate',    'e', '0', 'logical',
                    'force',      'f', '0', 'logical',
@@ -35,10 +34,8 @@ main <- function(args) {
   options <- getopt(spec, opt=args, command='bootstrapMPI.R')
 
   # Define the default value of the options
-  size <- if (mpi.comm.size(0) > 1) mpi.comm.size(0) else mpi.universe.size()
-  opt <- list(verbose=FALSE, count=size-1, profile=FALSE, emulate=FALSE,
-		  force=FALSE, threshold=800, cores=1, nochunking=FALSE,
-		  sequential=FALSE)
+  opt <- list(verbose=FALSE, profile=FALSE, emulate=FALSE, force=FALSE,
+              threshold=800, cores=1, nochunking=FALSE, sequential=FALSE)
 
   # Merge the command line with the default values
   opt[names(options)] <- options
@@ -53,7 +50,7 @@ main <- function(args) {
     workerLoop(cl, cores=opt$cores, verbose=opt$verbose)
   } else {
     # Create and register an MPI cluster
-    cl <- startMPIcluster(count=opt$count, bcast=!opt$emulate, verbose=opt$verbose)
+    cl <- startMPIcluster(bcast=!opt$emulate, verbose=opt$verbose)
     registerDoMPI(cl)
 
     # Display a summary of how we're going to run the benchmark
