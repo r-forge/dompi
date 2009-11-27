@@ -16,94 +16,66 @@
 # TODO Document the usage
 
 suppressMessages(library(doMPI))
+suppressMessages(library(getopt))
 
 main <- function(args) {
-  count <- if (mpi.comm.size(0) > 1) {
-    mpi.comm.size(0) - 1
-  } else {
-    mpi.universe.size() - 1
-  }
-  bcast <- TRUE
-  verbose <- FALSE
-  profile <- FALSE
-  forcePiggyback <- FALSE
-  bcastThreshold <- 800
-  cores <- 1
-  sequential <- TRUE
-  chunking <- TRUE
-  wfile <- sprintf("MPI_%d_%s.log", mpi.comm.rank(0), Sys.info()[['user']])
+  # Define the command line options
+  spec <- matrix(c('verbose',    'v', '0', 'logical',
+                   'count',      'n', '1', 'integer',
+                   'profile',    'p', '0', 'logical',
+                   'emulate',    'e', '0', 'logical',
+                   'force',      'f', '0', 'logical',
+                   'threshold',  't', '1', 'integer',
+                   'cores',      'c', '1', 'integer',
+                   'nochunking', 'k', '0', 'logical',
+                   'sequential', 's', '0', 'logical'),
+                 ncol=4, byrow=TRUE)
 
   # Process the command line
-  i <- 1
-  while (i <= length(args)) {
-    if (args[i] == '-n') {
-      if (mpi.comm.size(0) > 1)
-        stop('error: -n cannot be used in non-spawning mode')
-      i <- i + 1
-      if (is.na(args[i]))
-        stop('error: -n takes a required numeric argument')
-      count <- suppressWarnings(as.integer(args[i]))
-      if (is.na(count))
-        stop('error: -n takes a numeric argument')
-    } else if (args[i] == '-emulate') {
-      bcast <- FALSE
-    } else if (args[i] == '-v') {
-      verbose <- TRUE
-    } else if (args[i] == '-profile') {
-      profile <- TRUE
-    } else if (args[i] == '-force') {
-      forcePiggyback <- TRUE
-    } else if (args[i] == '-threshold') {
-      i <- i + 1
-      if (is.na(args[i]))
-        stop('error: -threshold takes a required numeric argument')
-      bcastThreshold <- suppressWarnings(as.integer(args[i]))
-      if (is.na(bcastThreshold))
-        stop('error: -threshold takes a numeric argument')
-    } else if (args[i] == '-cores') {
-      i <- i + 1
-      if (is.na(args[i]))
-        stop('error: -cores takes a required numeric argument')
-      cores <- suppressWarnings(as.integer(args[i]))
-      if (is.na(cores))
-        stop('error: -cores takes a numeric argument')
-    } else {
-      stop('error: illegal option: ', args[i])
-    }
-    i <- i + 1
-  }
+  options <- getopt(spec, opt=args, command='bootstrapMPI.R')
+
+  # Define the default value of the options
+  size <- if (mpi.comm.size(0) > 1) mpi.comm.size(0) else mpi.universe.size()
+  opt <- list(verbose=FALSE, count=size-1, profile=FALSE, emulate=FALSE,
+		  force=FALSE, threshold=800, cores=1, nochunking=FALSE,
+		  sequential=FALSE)
+
+  # Merge the command line with the default values
+  opt[names(options)] <- options
 
   # Check if this is the master or a cluster worker
   if (mpi.comm.rank(0) > 0) {
     # This is a cluster worker
-    outfile <- if (verbose) wfile else "/dev/null"
+    wfile <- sprintf("MPI_%d_%s.log", mpi.comm.rank(0), Sys.info()[['user']])
+    outfile <- if (opt$verbose) wfile else "/dev/null"
     sinkWorkerOutput(outfile)
-    cl <- openMPIcluster(bcast=bcast)
-    workerLoop(cl, cores=cores, verbose=verbose)
+    cl <- openMPIcluster(bcast=!opt$emulate)
+    workerLoop(cl, cores=opt$cores, verbose=opt$verbose)
   } else {
-    if (forcePiggyback) {
+    # Create and register an MPI cluster
+    cl <- startMPIcluster(count=opt$count, bcast=!opt$emulate, verbose=opt$verbose)
+    registerDoMPI(cl)
+
+    # Display a summary of how we're going to run the benchmark
+    if (opt$force) {
       cat("Broadcasting is disabled: job data will always be piggy-backed\n")
     } else {
-      if (bcast) {
-        cat("Using true MPI broadcast for job data\n")
-      } else {
+      if (opt$emulate) {
         cat("Using emulated broadcast for job data\n")
+      } else {
+        cat("Using true MPI broadcast for job data\n")
       }
-      cat(sprintf("Piggy-back/broadcast threshold is %d\n", bcastThreshold))
+      cat(sprintf("Piggy-back/broadcast threshold is %d\n", opt$threshold))
     }
-
-    # This is the master
-    # Create and register an MPI cluster
-    cl <- startMPIcluster(count=count, bcast=bcast, verbose=verbose)
-    registerDoMPI(cl)
+    cat(sprintf("Chunking is %s\n", if (opt$nochunking) "off" else "on"))
 
     x <- iris[which(iris[,5] != "setosa"), c(1,5)]
     trials <- 10000
 
-    chunkSize <- if (chunking) ceiling(trials / getDoParWorkers()) else 1
-    opts <- list(chunkSize=chunkSize, profile=profile,
-                 forcePiggyback=forcePiggyback,
-                 bcastThreshold=bcastThreshold)
+    chunkSize <- if (opt$nochunking) 1 else ceiling(trials / getDoParWorkers())
+    opts <- list(chunkSize=chunkSize, profile=opt$profile,
+                 forcePiggyback=opt$force,
+                 bcastThreshold=opt$threshold)
     trash <- function(...) NULL
 
     ptime <- system.time({
@@ -118,9 +90,11 @@ main <- function(args) {
     cat(sprintf('Parallel time using doMPI on %d workers: %f\n',
                 getDoParWorkers(), ptime))
 
+    # We must shutdown the cluster before running the sequential benchmark
+    # in case any cluster workers are running on the local machine
     closeCluster(cl)
 
-    if (sequential) {
+    if (opt$sequential) {
       stime <- system.time({
         foreach(icount(trials), .combine=trash, .multicombine=TRUE) %do% {
           ind <- sample(100, 100, replace=TRUE)
