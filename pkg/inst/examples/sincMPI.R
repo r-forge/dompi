@@ -4,10 +4,10 @@
 # And it also makes a pretty picture, which is why there is also a demo
 # version of it included with doMPI.
 
-library(doMPI)
+suppressMessages(library(doMPI))
 
 # Create and register an MPI cluster
-cl <- startMPIcluster(2)
+cl <- startMPIcluster(count=2)
 registerDoMPI(cl)
 
 # Define the grid over which to compute the sinc function

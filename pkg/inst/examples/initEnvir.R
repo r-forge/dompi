@@ -7,10 +7,10 @@
 # worker's execution environment, plus extra arguments specified
 # by the initArgs option.
 
-library(doMPI)
+suppressMessages(library(doMPI))
 
 # Create and register an MPI cluster
-cl <- startMPIcluster(2)
+cl <- startMPIcluster(count=2)
 registerDoMPI(cl)
 
 # Create an output file that the workers can write to using

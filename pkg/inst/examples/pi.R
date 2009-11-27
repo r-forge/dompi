@@ -4,10 +4,10 @@
 # but not now.  But it's an interesting example of using vectorization
 # with parallelization.
 
-library(doMPI)
+suppressMessages(library(doMPI))
 
 # Create and register an MPI cluster
-cl <- startMPIcluster(2)
+cl <- startMPIcluster(count=2)
 registerDoMPI(cl)
 
 # Define a "parallel pi" function

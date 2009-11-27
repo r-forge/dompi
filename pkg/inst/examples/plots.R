@@ -11,10 +11,10 @@
 # Presumably this is due to the use of the PNG device, but I haven't
 # tracked it down.
 
-library(doMPI)
+suppressMessages(library(doMPI))
 
 # Create and register an MPI cluster
-cl <- startMPIcluster(2)
+cl <- startMPIcluster(count=2)
 registerDoMPI(cl)
 
 # Initialize variables

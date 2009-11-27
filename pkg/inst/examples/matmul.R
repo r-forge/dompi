@@ -5,10 +5,10 @@
 # world, and it shows how to use the "iter" method on a matrix
 # to iterate over block columns of the matrix "y".
 
-library(doMPI)
+suppressMessages(library(doMPI))
 
 # Create and register an MPI cluster
-cl <- startMPIcluster(count=3)
+cl <- startMPIcluster(count=2)
 registerDoMPI(cl)
 
 # Define a parallel matrix multiply function

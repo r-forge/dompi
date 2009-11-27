@@ -3,10 +3,10 @@
 # in the foreach loop executes very quickly, but it does a lot of trials.
 # That makes it a good example of the need for the chunkSize option.
 
-library(doMPI)
+suppressMessages(library(doMPI))
 
 # Create and register an MPI cluster
-cl <- startMPIcluster(2)
+cl <- startMPIcluster(count=2)
 registerDoMPI(cl)
 
 # Initialize variables

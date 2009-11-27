@@ -4,10 +4,10 @@
 # first argument to the .combine function can be different than the
 # subsequent arguments.  It also sets .inorder to TRUE for efficiency.
 
-library(doMPI)
+suppressMessages(library(doMPI))
 
 # Create and register an MPI cluster
-cl <- startMPIcluster(2)
+cl <- startMPIcluster(count=2)
 registerDoMPI(cl)
 
 # Define a .combine function that writes its arguments to a file
