@@ -30,12 +30,6 @@ local({
 startMPIcluster <- function(count, verbose=FALSE, workdir=getwd(),
                             logdir=workdir, maxcores=1,
                             includemaster=TRUE, bcast=TRUE) {
-  # I think this restriction is currently necessary
-  if (mpi.comm.rank(0) != 0) {
-    warning('perhaps you should use "-np 1" from mpirun/orterun?')
-    stop('startMPIcluster should only be executed from rank 0 of comm 0')
-  }
-
   cl <- getMPIcluster()
   if (!is.null(cl)) {
     if (missing(count) || count == cl$workerCount)
@@ -44,21 +38,66 @@ startMPIcluster <- function(count, verbose=FALSE, workdir=getwd(),
       stop(sprintf("an MPI cluster of size %d already running",
                    cl$workerCount))
   } else if (mpi.comm.size(0) > 1) {
-    if (missing(count)) {
-      count <- mpi.comm.size(0) - 1
-    } else if (count != mpi.comm.size(0) - 1) {
-      # XXX error message could be improved
-      stop(sprintf("an MPI cluster of size %d was started", mpi.comm.size(0) - 1))
-    }
+    if (mpi.comm.rank(0) == 0) {
+      if (missing(count)) {
+        count <- mpi.comm.size(0) - 1
+      } else if (count != mpi.comm.size(0) - 1) {
+        # XXX error message could be improved
+        stop(sprintf("an MPI cluster of size %d was started", mpi.comm.size(0) - 1))
+      }
 
-    cl <- list(comm=0, workerCount=count, workerid=0, verbose=verbose)
-    class(cl) <- if (bcast) {
-      c("mpicluster", "dompicluster")
+      cl <- list(comm=0, workerCount=count, workerid=0, verbose=verbose)
+      class(cl) <- if (bcast) {
+        c("mpicluster", "dompicluster")
+      } else {
+        c("nbmpicluster", "mpicluster", "dompicluster")
+      }
+      setMPIcluster(cl)
+      cl
     } else {
-      c("nbmpicluster", "mpicluster", "dompicluster")
+      # This is a cluster worker, so execute workerLoop
+      tryCatch({
+        wfile <- sprintf("MPI_%d_%s.log", mpi.comm.rank(0), Sys.info()[['user']])
+        tempdir <- Sys.getenv('TMPDIR', '/tmp')
+        if (!file.exists(tempdir)) {
+          tempdir <- getwd()
+        }
+
+        # Try to set the working directory
+        tryCatch({
+          setwd(workdir)
+        },
+        error=function(e) {
+          cat(sprintf('Error setting current directory to %s\n', workdir),
+              file=stderr())
+          cat(sprintf('Executing workerLoop using workdir %s\n', getwd()),
+              file=stderr())
+        })
+
+        # If specified logdir doesn't exist, use current working directory
+        if (!file.exists(logdir)) {
+          logdir <- getwd()
+        }
+
+        logfile <- file.path(logdir, wfile)
+        outfile <- if (verbose) logfile else "/dev/null"
+        sinkWorkerOutput(outfile)
+
+        # Don't enter workerLoop if count was badly specified, because
+        # in that case, the master will exit, so we must exit also
+        if (!missing(count) && count != mpi.comm.size(0) - 1) {
+          cat('illegal value of count specified\n', file=stderr())
+        } else {
+          cl <- openMPIcluster(bcast=bcast, comm=0)
+          cores <- maxcores  # XXX this needs to be fixed
+
+          workerLoop(cl, cores=cores, verbose=verbose)
+        }
+      },
+      finally={
+        mpi.quit()
+      })
     }
-    setMPIcluster(cl)
-    cl
   } else {
     comm <- 1
     intercomm <- 2
