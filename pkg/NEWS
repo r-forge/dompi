@@ -5,6 +5,8 @@ NEWS/ChangeLog for doMPI
     o	rewrote MPI broadcast support to be more efficient
     o	added backend-specific forcePiggyback and bcastThreshold options
     o	added support for executing doMPI scripts in non-spawn mode
+    o   modified benchmarks to take command line arguments using getopt
+    o   modified benchmarks and examples to run in non-spawn mode
 
 0.1-1	2009-11-20
     o	added sanity checks on the way the program is executed
