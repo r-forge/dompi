@@ -3,16 +3,18 @@ NEWS/ChangeLog for doMPI
 
 0.1-2   2009-11-XX
     o	rewrote MPI broadcast support to be more efficient
-    o	added backend-specific forcePiggyback and bcastThreshold options
+    o	added backend-specific "forcePiggyback" and "bcastThreshold" options
     o	added support for executing doMPI scripts in non-spawn mode
+    o	added support for multiple cluster objects by adding "comm" and
+	"intercomm" arguments to startMPIcluster
     o   modified benchmarks to take command line arguments using getopt
     o   modified benchmarks and examples to run in non-spawn mode
 
 0.1-1	2009-11-20
     o	added sanity checks on the way the program is executed
-    o	added backend-specific profile option
-    o	added bcast argument to startMPIcluster
-    o	added logdir argument to startMPIcluster and startNWScluster
+    o	added backend-specific "profile" option
+    o	added "bcast" argument to startMPIcluster
+    o	added "logdir" argument to startMPIcluster and startNWScluster
     o	use of mclapply controlled via "maxcores" argument
     o	multicore and nws are now suggested rather than required
     o	new examples and a demo
