@@ -43,16 +43,18 @@ This allows it to do more, and (hopefully) execute more efficiently.
 <h2>Features of the doMPI backend</h2>
 <p>
 <ul>
-  <li>Task arguments are not fetched from the iterators until they are needed
-      in order to use less memory.</li>
-  <li>Results are processed by the master as they are returned by the cluster workers.</li>
+  <li>Data that is common to all tasks can be broadcast to the cluster workers,
+      or piggy-backed with the first task to the workers.</li>
+  <li>It is easy to write scripts that can be executed interactively or in
+      batch mode using mpirun/orterun.</li>
   <li>A chunkSize option is supported to increase the task granularity for
       better performance.</li>
   <li>If chunkSize is used, and a cluster worker has multiple cores, the mclapply
       function from the 'multicore' package can be used to execute the tasks in parallel,
-      thus providing hybrid parallelism.</li>
-  <li>Data that is common to all tasks can be broadcast to the cluster workers,
-      or piggy-backed with the first task to the workers.</li>
+      thus enabling hybrid parallelism.</li>
+  <li>An arbitrarily large number of tasks can be executed, since task arguments
+      are not fetched until they are ready to be submitted, and results are
+      processed as they are returned.</li>
   <li>Backend-specific options for initializing and finalizing the worker execution
       environments.</li>
 </ul>
