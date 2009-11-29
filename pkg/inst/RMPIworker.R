@@ -29,6 +29,8 @@ local({
   includemaster <- FALSE  # assume master doesn't use much cpu time
   bcast <- TRUE
   verbose <- FALSE
+  comm <- 3
+  intercomm <- 4
 
   # process the command line
   for (arg in commandArgs(trailingOnly=TRUE)) {
@@ -56,6 +58,10 @@ local({
       bcast <- as.logical(val)
     } else if (opt == 'VERBOSE') {
       verbose <- as.logical(val)
+    } else if (opt == 'COMM') {
+      comm <- as.integer(val)
+    } else if (opt == 'INTERCOMM') {
+      intercomm <- as.integer(val)
     } else {
       warning('ignoring unrecognized option: ', opt)
     }
@@ -76,8 +82,6 @@ local({
     FALSE
 
   # initialize MPI
-  comm <- 1
-  intercomm <- 2
   mpi.comm.get.parent(intercomm)
   mpi.intercomm.merge(intercomm, 1, comm)
   mpi.comm.set.errhandler(comm)

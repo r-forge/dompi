@@ -16,48 +16,67 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307
 # USA
 
-# these variables are used to cache a "cluster" objects
-getMPIcluster <- NULL
-setMPIcluster <- NULL
+.cluster.cache <- new.env(parent=emptyenv())
 
-local({
-  cl <- NULL
-  getMPIcluster <<- function() cl
-  setMPIcluster <<- function(new) cl <<- new
-})
+getMPIcluster <- function(comm) {
+  tryCatch({
+    get(sprintf("cluster_%d", comm), pos=.cluster.cache, inherits=FALSE)
+  },
+  error=function(e) {
+    NULL
+  })
+}
 
-# this is called by the user to create an mpi cluster object
+setMPIcluster <- function(comm, cl) {
+  assign(sprintf("cluster_%d", comm), cl, pos=.cluster.cache)
+}
+
+# This is called by the user to create an mpi cluster object
 startMPIcluster <- function(count, verbose=FALSE, workdir=getwd(),
                             logdir=workdir, maxcores=1,
-                            includemaster=TRUE, bcast=TRUE) {
-  cl <- getMPIcluster()
+                            includemaster=TRUE, bcast=TRUE,
+                            comm=if(mpi.comm.size(0) > 1) 0 else 3,
+                            intercomm=comm+1) {
+  size <- mpi.comm.size(comm)
+  rank <- mpi.comm.rank(comm)
+
+  # See if we've already created a cluster for the specified communicator
+  cl <- getMPIcluster(comm)
+
   if (!is.null(cl)) {
     if (missing(count) || count == cl$workerCount)
       cl
     else
-      stop(sprintf("an MPI cluster of size %d already running",
-                   cl$workerCount))
-  } else if (mpi.comm.size(0) > 1) {
-    if (mpi.comm.rank(0) == 0) {
-      if (missing(count)) {
-        count <- mpi.comm.size(0) - 1
-      } else if (count != mpi.comm.size(0) - 1) {
-        # XXX error message could be improved
-        stop(sprintf("an MPI cluster of size %d was started", mpi.comm.size(0) - 1))
+      stop(sprintf("an MPI cluster of size %d is already using comm %d",
+                   cl$workerCount, comm))
+  } else if (comm == 0) {
+    if (rank == 0) {
+      # This is the master, so make sure there is at least one worker
+      if (size < 2) {
+        stop('comm 0 cannot be used unless there are at least two processes')
       }
 
-      cl <- list(comm=0, workerCount=count, workerid=0, verbose=verbose)
+      # Handle the count argument
+      if (missing(count)) {
+        count <- size - 1
+      } else if (count != size - 1) {
+        stop(sprintf("count must be either unspecified, or set to %d",
+                     size - 1))
+      }
+
+      # Create and return the cluster object
+      cl <- list(comm=comm, workerCount=count, workerid=rank, verbose=verbose)
       class(cl) <- if (bcast) {
         c("mpicluster", "dompicluster")
       } else {
         c("nbmpicluster", "mpicluster", "dompicluster")
       }
-      setMPIcluster(cl)
+      setMPIcluster(comm, cl)
       cl
     } else {
       # This is a cluster worker, so execute workerLoop
       tryCatch({
-        wfile <- sprintf("MPI_%d_%s.log", mpi.comm.rank(0), Sys.info()[['user']])
+        wfile <- sprintf("MPI_%d_%s.log", rank, Sys.info()[['user']])
         tempdir <- Sys.getenv('TMPDIR', '/tmp')
         if (!file.exists(tempdir)) {
           tempdir <- getwd()
@@ -68,9 +87,9 @@ startMPIcluster <- function(count, verbose=FALSE, workdir=getwd(),
           setwd(workdir)
         },
         error=function(e) {
-          cat(sprintf('Error setting current directory to %s\n', workdir),
+          cat(sprintf("Error setting current directory to %s\n", workdir),
               file=stderr())
-          cat(sprintf('Executing workerLoop using workdir %s\n', getwd()),
+          cat(sprintf("Executing workerLoop using workdir %s\n", getwd()),
               file=stderr())
         })
 
@@ -83,12 +102,16 @@ startMPIcluster <- function(count, verbose=FALSE, workdir=getwd(),
         outfile <- if (verbose) logfile else "/dev/null"
         sinkWorkerOutput(outfile)
 
+        # Remove any .Last function, which is probably intended for the master
+        if (exists(".Last", where=globalenv(), mode="function", inherits=FALSE))
+          rm(list=".Last", pos=globalenv())
+
         # Don't enter workerLoop if count was badly specified, because
         # in that case, the master will exit, so we must exit also
-        if (!missing(count) && count != mpi.comm.size(0) - 1) {
+        if (!missing(count) && count != size - 1) {
           cat('illegal value of count specified\n', file=stderr())
         } else {
-          cl <- openMPIcluster(bcast=bcast, comm=0)
+          cl <- openMPIcluster(bcast=bcast, comm=comm, workerid=rank)
           cores <- maxcores  # XXX this needs to be fixed
 
           workerLoop(cl, cores=cores, verbose=verbose)
@@ -99,10 +122,8 @@ startMPIcluster <- function(count, verbose=FALSE, workdir=getwd(),
       })
     }
   } else {
-    comm <- 1
-    intercomm <- 2
-    if (mpi.comm.size(comm) > 0) {
-      stop(paste("an MPI cluster already exists:", comm))
+    if (size > 0) {
+      stop(sprintf("comm %d appears to already be in use", comm))
     }
 
     rscript <- file.path(R.home(), "bin", "Rscript")
@@ -111,6 +132,8 @@ startMPIcluster <- function(count, verbose=FALSE, workdir=getwd(),
               sprintf("WORKDIR=%s", workdir),
               sprintf("LOGDIR=%s", logdir),
               sprintf("MAXCORES=%d", maxcores),
+              sprintf("COMM=%d", comm),
+              sprintf("INTERCOMM=%d", intercomm),
               sprintf("INCLUDEMASTER=%s", includemaster),
               sprintf("BCAST=%s", bcast),
               sprintf("VERBOSE=%s", verbose))
@@ -142,7 +165,7 @@ startMPIcluster <- function(count, verbose=FALSE, workdir=getwd(),
       stop("error merging the comm for master and slaves")
     }
 
-    # participate in making the nodelist, but the master doesn't use it
+    # Participate in making the nodelist, but the master doesn't use it
     # the workers use it for deciding how many cores to use
     nodelist <- list('0'=nodename)
     ## nodelist <- list('0'=procname)
@@ -154,7 +177,7 @@ startMPIcluster <- function(count, verbose=FALSE, workdir=getwd(),
     } else {
       c("nbmpicluster", "mpicluster", "dompicluster")
     }
-    setMPIcluster(cl)
+    setMPIcluster(comm, cl)
     cl
   }
 }
@@ -170,7 +193,7 @@ closeCluster.mpicluster <- function(cl, ...) {
     mpi.send.Robj(NULL, workerid, tag, cl$comm)
   }
 
-  setMPIcluster(NULL)
+  setMPIcluster(cl$comm, NULL)
 
   if (cl$comm != 0) {
     mpi.comm.disconnect(cl$comm)
