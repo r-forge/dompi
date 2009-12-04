@@ -414,75 +414,141 @@ executing the loop are written to disk by the workers directly.
 \section{Running doMPI on a cluster}
 
 Now that we've run some interesting examples on a single computer,
-let's try running on multiple computers, which is really the purpose of
+let's try running on multiple computers, which is the real purpose of
 the \texttt{doMPI} package.
 
-The basic way to execute \texttt{doMPI} scripts on multiple computers is
-to execute the \texttt{R} interpreter using the command from your
-\texttt{MPI} installation that is intended to run \texttt{MPI} programs.
-That command is usually named \texttt{mpirun}, \texttt{mpiexec}, or in
-the case of \texttt{Open MPI}, \texttt{orterun}.  Since I've only
-used \texttt{Open MPI}, I'll only discuss the use of \texttt{orterun}.
+To execute \texttt{doMPI} scripts on multiple computers, you need to
+execute the \texttt{R} interpreter using a command such as
+\texttt{mpirun}, \texttt{mpiexec}, or in the case of \texttt{Open MPI},
+\texttt{orterun}\footnote{There could be another way to run on multiple
+computers, but I haven't figured it out.  But I had a hard time finding
+documentation on this subject, especially in the context of
+\texttt{Rmpi}.}.  Since I've only used \texttt{Open MPI}, I'll only
+discuss the use of \texttt{orterun}, although it should be pretty simple
+to translate my instructions for other implementations.
 
-An important point to keep in mind is that you only want and need to
-execute your \texttt{doMPI} script on one machine, which I call the
-master machine.  I usually use my local machine as the master, but that
-isn't necessary with \texttt{MPI}, as I understand it.  The cluster
-workers are started via the \texttt{Rmpi} \texttt{mpi.comm.spawn}
-function when you execute \texttt{startMPIcluster}.  The \texttt{R}
-script that the workers execute is called \texttt{RMPIworker.R}, which
-is in the \texttt{doMPI} installation directory.
+When you execute \texttt{orterun}, you can specify the hosts to use
+as a comma-separated list using the \texttt{-H} or \texttt{-host}
+option, or by specifying a ``host file'' using the \texttt{-hostfile}
+option.  You can also use the \texttt{-n} or \texttt{-np} option to
+specify how many copies of your script to run on those nodes.  If you specify
+that only one copy should be executed, then \texttt{doMPI} will start
+workers for you using the \texttt{Rmpi} \texttt{mpi.comm.spawn}
+function when you execute \texttt{startMPIcluster}.  If you specify
+that more than one copy of your script should be executed on those
+hosts, then \texttt{doMPI} will
+not spawn workers, assuming that you have started all of the workers that
+you wanted using \texttt{orterun}\footnote{Actually,
+\texttt{startMPIcluster} will always spawn workers unless the \texttt{comm}
+argument is \texttt{0}, but \texttt{comm} defaults to \texttt{0} if
+\texttt{mpi.comm.size(0)} is greater than one.  See the documentation on
+\texttt{startMPIcluster} for more information.}.
+That means that multiple instances
+of your script are going to start running, or in other words, the
+workers are going to execute your script.  In that case, your script
+should call the \texttt{startMPIcluster} function near the beginning.
+The \texttt{startMPIcluster} function will notice when a ``worker''
+calls it, and will execute the \texttt{workerLoop} function, in order to
+execute tasks submitted by the master, or ``rank 0'' process.
 
-So the trick is to get \texttt{orterun} to execute your \texttt{doMPI}
-script on a single computer, but to create an environment in which you
-can spawn workers on some other computers.  Here's an example that uses
-\texttt{orterun} to execute one of the \texttt{doMPI} examples:
+Now let's try some examples.  Here's an example that will run the 
+script ``sincMPI.R'' using two workers:
 
 \begin{verbatim}
-% orterun -H localhost,n2,n3 -n 1 R --slave --vanilla -f sincMPI.R
+% orterun -H localhost,n2,n3 R --slave -f sincMPI.R
 \end{verbatim}
 
-The \texttt{-H} option specifies a comma separated list of computers to
-use.  The \texttt{-n} option says to run the specified command on only one
-machine, which will be the first one listed with \texttt{-H}, which is
-``localhost'' in this example.  The actual command that will be executed
-on localhost is ``R'', which is of course the \texttt{R} interpreter.
-The \texttt{R} command will execute the ``sincMPI.R'' script, which we
-specified via the \texttt{-f} option.  By also specifying ``n2'' and
-``n3'' with the \texttt{-H} option, the \texttt{mpi.comm.spawn} function will
-start worker processes on those computers when ``sincMPI.R''
-calls \texttt{startMPIcluster}.
+The \texttt{orterun} command will run the \texttt{R} interpreter on
+``localhost'', ``n2'', and ``n3'', and \texttt{R} will execute the
+script named ``sincMPI.R'' in the current directory.  \texttt{sincMPI.R}
+is an example that comes in the \texttt{doMPI} package, so you can try
+this command out by going to the ``examples'' directory of the
+\texttt{doMPI} installation.
 
-This may seem a bit complicated, but it's not too bad.  And if you've
-run \texttt{snow} programs using \texttt{Rmpi}, it may look very
-familiar.  Just remember to use the \texttt{-H} option to specify the
-machines to run on, and always use \texttt{-n 1}.  The rest is just the
-\texttt{R} command line to execute a script non-interactively.
+The \texttt{sincMPI.R} script first loads \texttt{doMPI}, and then calls
+\texttt{startMPIcluster}.  The copy of \texttt{sincMPI.R} running on the
+master, or ``rank 0'' process, will return from \texttt{startMPIcluster},
+but the other two processes (which are running on hosts ``n2'' and
+``n3'') will not return, since they will execute the \texttt{workerLoop}
+function.  That is why it's a good idea to execute
+\texttt{startMPIcluster} near the beginning of the script, otherwise the
+workers may run into problems executing code that was intended to be
+executed by the master.
 
-Of course, in order for this to work, you've got to set up a lot of
-things correctly on the computers specified via \texttt{-H}.  Generally
-speaking, I would strongly suggest that you specify computers that have
-an environment that is almost identical to your local machine.  That is,
-they should all have the same user account, with the same home
-directory, with passwordless ssh enabled, and all of the same software
-installed using the same file paths.  For example, \texttt{R} should be
-installed in the same place on all machines, and the \texttt{doMPI}
-package should be installed in the same directory on all machines, as
-well.  That's a pretty big requirement, but that's the way most people
-do things if they're using \texttt{MPI}, and so that's the way that many
-computer clusters are configured.
+The last example used what I call ``non-spawn'' or ``static'' mode.  Now
+let's run in ``spawn'' or ``dynamic'' mode.  We'll start the master on
+node ``n1'', but we'll also list hosts ``n2'' and ``n3''.  That will
+include those nodes in the \texttt{MPI} ``universe'', so that
+\texttt{startMPIcluster} will be able to spawn processes to them:
 
-Also note that when the ``sincMPI.R'' script calls the
-\texttt{startMPIcluster} function, it specifies a worker count of two.
-That works when you're in an interactive \texttt{R} session, and when
-executing the script via \texttt{orterun}.  However, when you use
-\texttt{orterun}, you don't have to specify a value for count, since the
-default value of count is one less than the value return by
-\texttt{mpi.universe.size}\footnote{It appears to me that the size of
-the \texttt{MPI} universe is equal to the number of names specified via
-the \texttt{-H} option, but other options would probably change that.}.
-That allows you to control the number of workers that are spawned via
-the \texttt{orterun} command.
+\begin{verbatim}
+% orterun -H n1,n2,n3 -n 1 R --slave -f sincMPI.R
+\end{verbatim}
+
+Because we specified \texttt{-n 1}, the \texttt{orterun} command only
+starts one copy of the \texttt{R} interpreter running.
+\texttt{startMPIcluster} will then spawn two workers, since it notices
+that \texttt{mpi.universe.size()} is three.  They will execute on hosts
+``n2'' and ``n3'', since \texttt{MPI} knows that they are part of the
+``universe''.
+
+So which of these two methods should you use?  The \texttt{Open MPI}
+documentation advices using ``non-spawn'' mode, since that will give
+better performance.  You probably also need to use ``non-spawn'' mode to
+run with a batch queueing system, such as ``slurm''.  But if your script
+needs to perform other operations before \texttt{startMPIcluster} that
+would fail on the worker processes, or if you need to create multiple
+clusters, then you should use the ``spawn'' mode, by specifying
+\texttt{-n 1}.
+
+Here's a final example that starts multiple processes on the hosts using
+``non-spawn'' mode:
+
+\begin{verbatim}
+% orterun -H localhost,n2,n3 -n 6 R --slave -f sincMPI.R
+\end{verbatim}
+
+This will start two processes on each of the hosts for a total of six
+processes.  The master and one worker will run on ``localhost'', and
+``n2'' and ``n3'' will both run two workers.  In order to spawn five
+workers, you would use \texttt{-n 1}, but you'd also have to modify the
+script to call \texttt{startMPIcluster} with \texttt{count} set to
+\texttt{5}.
+
+In general, I'd suggest not using the \texttt{startMPIcluster}
+\texttt{count} argument unless you're doing something fancy, like
+creating multiple clusters.  I think that's the best method, since it
+let's you control the number of workers strictly from the
+\texttt{orterun} command, which is what we've been doing in all of these
+examples.  But if you do specify a value for \texttt{count} while in
+``non-spawn'' mode, it's got to be equal to \texttt{mpi.comm.size(0) -
+1}, or \texttt{startMPIcluster} will issue an error.  That's one reason
+that none of the examples or benchmarks that come with \texttt{doMPI}
+use the \texttt{count} argument.
+
+\section{Host setup}
+
+Of course, in order for any of these examples to work, you've got to set
+up a lot of things correctly on all of the hosts specified via
+\texttt{-H}.  Generally speaking, I would strongly suggest that you
+setup your hosts so they have an environment that is almost identical to
+your local machine.  That is, they should all have the same user
+account, with the same home directory, with passwordless ssh enabled,
+and all of the same software installed using the same file paths.  For
+example, \texttt{R} should be installed in the same place on all
+machines, and the \texttt{doMPI} package should be installed in the same
+directory on all machines, as well.  That's a pretty big requirement,
+but that's the way most people do things with \texttt{MPI}, and so
+that's the way that many computer clusters are configured.
+
+There are various tricks that you can use to make differently configured
+machines work together.  One trick is to create symbolic links on the
+worker machines to make them look more like the master machine.  And if
+your user account has different names on different machines, you can
+edit the ssh configuration file on the master machine to use the
+appropriate user name for each worker machine.  But if you're going to
+do much parallel execution, it's worth the time and effort to set up
+your computers so that you don't have to depend on tricks.
 
 \section{Conclusion}
 
@@ -496,14 +562,12 @@ administration challenges, and not programming challenges.  Since
 parallel environment, you can develop your program on a single computer,
 without using any parallel backend at all, let alone a tricky one.  Once
 your program is debugged and working, you can run it on a multicore
-workstation using a low maintenance parallel backend such as
+workstation using a ``low maintenance'' parallel backend such as
 \texttt{doMC}\footnote{The \texttt{doMC} package is also available on
 CRAN.}.  And once you've got a computer cluster set up that has all the
 software installed by some friendly sysadmin, with an NFS-mounted home
 directory, you can use the \texttt{doMPI} package to run that same
 parallel program very efficiently using \texttt{MPI} without having to
 learn anything about message passing.
-
-Have fun!
 
 \end{document}
