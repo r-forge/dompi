@@ -74,7 +74,7 @@ startMPIcluster <- function(count, verbose=FALSE, workdir=getwd(),
       setMPIcluster(comm, cl)
       cl
     } else {
-      # This is a cluster worker, so execute workerLoop
+      # This is a cluster worker, so execute dompiWorkerLoop
       tryCatch({
         wfile <- sprintf("MPI_%d_%s.log", rank, Sys.info()[['user']])
         tempdir <- Sys.getenv('TMPDIR', '/tmp')
@@ -89,7 +89,7 @@ startMPIcluster <- function(count, verbose=FALSE, workdir=getwd(),
         error=function(e) {
           cat(sprintf("Error setting current directory to %s\n", workdir),
               file=stderr())
-          cat(sprintf("Executing workerLoop using workdir %s\n", getwd()),
+          cat(sprintf("Executing dompiWorkerLoop using workdir %s\n", getwd()),
               file=stderr())
         })
 
@@ -106,7 +106,7 @@ startMPIcluster <- function(count, verbose=FALSE, workdir=getwd(),
         if (exists(".Last", where=globalenv(), mode="function", inherits=FALSE))
           rm(list=".Last", pos=globalenv())
 
-        # Don't enter workerLoop if count was badly specified, because
+        # Don't enter dompiWorkerLoop if count was badly specified, because
         # in that case, the master will exit, so we must exit also
         if (!missing(count) && count != size - 1) {
           cat('illegal value of count specified\n', file=stderr())
@@ -114,7 +114,7 @@ startMPIcluster <- function(count, verbose=FALSE, workdir=getwd(),
           cl <- openMPIcluster(bcast=bcast, comm=comm, workerid=rank)
           cores <- maxcores  # XXX this needs to be fixed
 
-          workerLoop(cl, cores=cores, verbose=verbose)
+          dompiWorkerLoop(cl, cores=cores, verbose=verbose)
         }
       },
       finally={

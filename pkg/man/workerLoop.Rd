@@ -1,14 +1,14 @@
-\name{workerLoop}
-\alias{workerLoop}
+\name{dompiWorkerLoop}
+\alias{dompiWorkerLoop}
 \title{Create and start an MPI cluster}
 \description{
-The \code{workerLoop} function is used from a cluster worker to run
+The \code{dompiWorkerLoop} function is used from a cluster worker to run
 the worker loop in order to execute worker tasks.  This is intended
 to be used from a \code{doMPI} script that is executed in
 \dQuote{non-spawn} mode.
 }
 \usage{
-workerLoop(cl, cores=1, verbose=FALSE)
+dompiWorkerLoop(cl, cores=1, verbose=FALSE)
 }
 \arguments{
   \item{cl}{a \code{dompicluster} object created with \code{startMPIcluster}
@@ -21,7 +21,7 @@ workerLoop(cl, cores=1, verbose=FALSE)
 \examples{
 \dontrun{
 cl <- openMPIcluster()
-workerLoop(cl)
+dompiWorkerLoop(cl)
 }
 }
 \keyword{utilities}

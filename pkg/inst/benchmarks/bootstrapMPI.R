@@ -47,7 +47,7 @@ main <- function(args) {
     outfile <- if (opt$verbose) wfile else "/dev/null"
     sinkWorkerOutput(outfile)
     cl <- openMPIcluster(bcast=!opt$emulate)
-    workerLoop(cl, cores=opt$cores, verbose=opt$verbose)
+    dompiWorkerLoop(cl, cores=opt$cores, verbose=opt$verbose)
   } else {
     # Create and register an MPI cluster
     cl <- startMPIcluster(bcast=!opt$emulate, verbose=opt$verbose)

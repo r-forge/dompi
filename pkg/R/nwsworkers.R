@@ -55,7 +55,7 @@ startNWScluster <- function(count=length(nodelist), verbose=FALSE,
   for (varName in workerVars)
     nwsDeclare(ws, varName, 'single')
 
-  # start our workerLoop (without waiting for it to finish, of course)
+  # start our dompiWorkerLoop (without waiting for it to finish, of course)
   eo <- list(blocking=FALSE, closure=FALSE)
   runWorkerLoop <- function(verbose, maxcores, includemaster, masternode) {
     require(doMPI)
@@ -102,7 +102,7 @@ startNWScluster <- function(count=length(nodelist), verbose=FALSE,
 
     cl <- doMPI:::openNWScluster(ws, rank)
 
-    workerLoop(cl, cores, verbose)
+    dompiWorkerLoop(cl, cores, verbose)
   }
   masternode <- Sys.info()[['nodename']]
   sp <- eachWorker(sl, runWorkerLoop, verbose, maxcores,

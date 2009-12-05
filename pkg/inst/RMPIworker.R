@@ -181,7 +181,7 @@ local({
   # this is where all the work is done
   cl <- openMPIcluster(bcast=bcast, comm=comm, workerid=workerid,
                        verbose=verbose)
-  workerLoop(cl, cores, verbose)
+  dompiWorkerLoop(cl, cores, verbose)
 
   # shutdown MPI
   mpi.comm.disconnect(comm)
