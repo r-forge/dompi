@@ -155,7 +155,7 @@ openNWScluster <- function(ws, workerid) {
 }
 
 bcastRecvFromMaster.nwscluster <- function(cl, datalen, ...) {
-  cl$broadcast()
+  unserialize(cl$broadcast())
 }
 
 sendToMaster.nwscluster <- function(cl, robj, ...) {
