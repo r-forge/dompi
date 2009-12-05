@@ -41,7 +41,7 @@ mklogger <- function(verbose, out=stdout()) {
 }
 
 # toplevel worker function
-workerLoop <- function(cl, cores=1, verbose=FALSE) {
+dompiWorkerLoop <- function(cl, cores=1, verbose=FALSE) {
   logger <- mklogger(verbose)
   logger('starting worker loop: cores = %d', cores)
 
@@ -102,12 +102,42 @@ workerLoop <- function(cl, cores=1, verbose=FALSE) {
       # sanity check the taskchunk now that any new job has been setup
       checkTask(taskchunk, jid)
 
-      logger('executing taskchunk %d containing %d tasks',
-             taskchunk$tid, taskchunk$numtasks)
-      resultchunk <- executeTaskChunk(cl$workerid, taskchunk, envir, err, cores)
+      resultchunk <- NULL
+      tryCatch({
+        withCallingHandlers({
+          logger('executing taskchunk %d containing %d tasks',
+                 taskchunk$tid, taskchunk$numtasks)
+          resultchunk <- executeTaskChunk(cl$workerid, taskchunk, envir, err, cores)
 
-      logger('returning results for taskchunk %d', taskchunk$tid)
-      sendToMaster(cl, resultchunk)
+          logger('returning results for taskchunk %d', taskchunk$tid)
+          sendToMaster(cl, resultchunk)
+        },
+        error=function(e) {
+          e$calls <- sys.calls()
+          signalCondition(e)
+        })
+      },
+      error=function(e) {
+        if (is.null(resultchunk)) {
+          cat(sprintf('error executing task: %s\n', conditionMessage(e)))
+          if (length(e$calls) > 0) {
+            cat('traceback (most recent call first):\n')
+            calls <- rev(e$calls)[c(-1, -2)]
+            for (x in calls) {
+              if (identical(x[[1]], as.name('withCallingHandlers')))
+                break
+              cat('> ')
+              print(x)
+            }
+          }   
+
+          logger('returning error results for taskchunk %d', taskchunk$tid)
+          resultchunk <- errorChunk(cl$workerid, taskchunk, e)
+          sendToMaster(cl, resultchunk)
+        } else {
+          stop(e)
+        }
+      })
     }
 
     # check if this is the end of a job
@@ -233,30 +263,7 @@ executeTaskChunk <- function(workerid, taskchunk, envir, err, cores) {
         assign(nm, args[[nm]], pos=envir)
       }
 
-      # use withCallingHandlers to capture the traceback if an error occurs
-      tryCatch({
-        withCallingHandlers({
-          eval(expr, envir)
-        },
-        error=function(e) {
-          e$calls <- sys.calls()
-          signalCondition(e)
-        })
-      },
-      error=function(e) {
-        cat(sprintf('error executing task: %s\n', conditionMessage(e)))
-        if (length(e$calls) > 0) {
-          cat('traceback (most recent call first):\n')
-          calls <- rev(e$calls)[c(-1, -2)]
-          for (x in calls) {
-            if (identical(x[[1]], as.name('withCallingHandlers')))
-              break
-            cat('> ')
-            print(x)
-          }
-        }
-        e
-      })
+      eval(expr, envir)
     }
   } else {
     function(...) err
@@ -277,4 +284,12 @@ executeTaskChunk <- function(workerid, taskchunk, envir, err, cores) {
          workerid=workerid, jid=taskchunk$jid,
          resultslist=mclapply(taskchunk$argslist, executeTask, mc.cores=cores))
   }
+}
+
+errorChunk <- function(workerid, taskchunk, err) {
+  errorTask <- function(i, err) err
+
+  list(numtasks=taskchunk$numtasks, tid=taskchunk$tid,
+       workerid=workerid, jid=taskchunk$jid,
+       resultslist=lapply(seq(along=taskchunk$argslist), errorTask, err))
 }
