@@ -17,6 +17,10 @@
 # USA
 
 local({
+  # load all packages that we need explicitly to avoid messages to stdout
+  suppressMessages(library(methods))  # because we're using Rscript
+  suppressMessages(library(doMPI))
+
   # set default option values
   tempdir <- Sys.getenv('TMPDIR', '/tmp')
   if (!file.exists(tempdir)) {
@@ -76,10 +80,6 @@ local({
   if (is.null(logdir)) {
     logdir <- workdir
   }
-
-  # load all packages that we need explicitly to avoid messages to stdout
-  suppressMessages(library(methods))  # because we're using Rscript
-  suppressMessages(library(doMPI))
 
   # if maxcores is greater than 1, then attempt to load multicore
   usemc <- if (maxcores > 1)
