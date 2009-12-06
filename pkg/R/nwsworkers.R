@@ -24,7 +24,7 @@ startNWScluster <- function(count=length(nodelist), verbose=FALSE,
     stop('either "count" or "nodelist" must be specified')
   }
 
-  if (! require(nws)) {
+  if (! suppressMessages(require(nws))) {
     stop('The nws package is required to create an nws cluster')
   }
 
