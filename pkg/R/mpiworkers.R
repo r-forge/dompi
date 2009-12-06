@@ -36,14 +36,9 @@ startMPIcluster <- function(count, verbose=FALSE, workdir=getwd(),
                             logdir=workdir, maxcores=1,
                             includemaster=TRUE, bcast=TRUE,
                             comm=if(mpi.comm.size(0) > 1) 0 else 3,
-                            intercomm=comm+1) {
+                            intercomm=comm+1, mtag=10, wtag=11) {
   size <- mpi.comm.size(comm)
   rank <- mpi.comm.rank(comm)
-
-  # Not sure if there's any reason to make these tags configurable,
-  # but at least I don't want to repeat these values anywhere else
-  mtag <- 20  # not sure if there's any reason to configure these tags
-  wtag <- 21
 
   # See if we've already created a cluster for the specified communicator
   cl <- getMPIcluster(comm)

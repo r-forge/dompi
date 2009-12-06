@@ -4,6 +4,7 @@ NEWS/ChangeLog for doMPI
 0.1-3   2009-12-XX
     o	modified exception handling in the worker loop to be more efficient
     o	renamed workerLoop to dompiWorkerLoop to avoid conflict with nws
+    o	added mtag and wtag arguments to startMPIcluster and openMPIcluster
 
 0.1-2   2009-12-04
     o	rewrote MPI broadcast support to be more efficient

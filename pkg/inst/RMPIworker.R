@@ -31,8 +31,8 @@ local({
   verbose <- FALSE
   comm <- 3
   intercomm <- 4
-  mtag <- 10
-  wtag <- 11
+  mtag <- formals(openMPIcluster)$mtag
+  wtag <- formals(openMPIcluster)$wtag
 
   # process the command line
   for (arg in commandArgs(trailingOnly=TRUE)) {
