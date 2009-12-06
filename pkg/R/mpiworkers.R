@@ -40,6 +40,11 @@ startMPIcluster <- function(count, verbose=FALSE, workdir=getwd(),
   size <- mpi.comm.size(comm)
   rank <- mpi.comm.rank(comm)
 
+  # Not sure if there's any reason to make these tags configurable,
+  # but at least I don't want to repeat these values anywhere else
+  mtag <- 20  # not sure if there's any reason to configure these tags
+  wtag <- 21
+
   # See if we've already created a cluster for the specified communicator
   cl <- getMPIcluster(comm)
 
@@ -65,7 +70,8 @@ startMPIcluster <- function(count, verbose=FALSE, workdir=getwd(),
       }
 
       # Create and return the cluster object
-      cl <- list(comm=comm, workerCount=count, workerid=rank, verbose=verbose)
+      cl <- list(comm=comm, workerCount=count, workerid=rank, verbose=verbose,
+                 mtag=mtag, wtag=wtag)
       class(cl) <- if (bcast) {
         c("mpicluster", "dompicluster")
       } else {
@@ -111,7 +117,8 @@ startMPIcluster <- function(count, verbose=FALSE, workdir=getwd(),
         if (!missing(count) && count != size - 1) {
           cat('illegal value of count specified\n', file=stderr())
         } else {
-          cl <- openMPIcluster(bcast=bcast, comm=comm, workerid=rank)
+          cl <- openMPIcluster(bcast=bcast, comm=comm, workerid=rank,
+                               mtag=mtag, wtag=wtag)
           cores <- maxcores  # XXX this needs to be fixed
 
           dompiWorkerLoop(cl, cores=cores, verbose=verbose)
@@ -134,6 +141,8 @@ startMPIcluster <- function(count, verbose=FALSE, workdir=getwd(),
               sprintf("MAXCORES=%d", maxcores),
               sprintf("COMM=%d", comm),
               sprintf("INTERCOMM=%d", intercomm),
+              sprintf("MTAG=%d", mtag),
+              sprintf("WTAG=%d", wtag),
               sprintf("INCLUDEMASTER=%s", includemaster),
               sprintf("BCAST=%s", bcast),
               sprintf("VERBOSE=%s", verbose))
@@ -171,7 +180,8 @@ startMPIcluster <- function(count, verbose=FALSE, workdir=getwd(),
     ## nodelist <- list('0'=procname)
     nodelist <- mpi.allgather.Robj(nodelist, comm)
 
-    cl <- list(comm=comm, workerCount=count, workerid=0, verbose=verbose)
+    cl <- list(comm=comm, workerCount=count, workerid=0, verbose=verbose,
+               mtag=mtag, wtag=wtag)
     class(cl) <- if (bcast) {
       c("mpicluster", "dompicluster")
     } else {
@@ -188,9 +198,8 @@ clusterSize.mpicluster <- function(cl, ...) {
 
 # mpicluster method for shutting down a cluster object
 closeCluster.mpicluster <- function(cl, ...) {
-  tag <- 11  # worker tag
   for (workerid in seq(length=cl$workerCount)) {
-    mpi.send.Robj(NULL, workerid, tag, cl$comm)
+    mpi.send.Robj(NULL, workerid, cl$wtag, cl$comm)
   }
 
   setMPIcluster(cl$comm, NULL)
@@ -207,21 +216,18 @@ bcastSendToCluster.mpicluster <- function(cl, data, ...) {
 }
 
 bcastSendToCluster.nbmpicluster <- function(cl, data, ...) {
-  tag <- 11  # worker tag
   for (dest in seq(length=cl$workerCount)) {
-    mpi.send(data, 4, dest, tag, cl$comm)
+    mpi.send(data, 4, dest, cl$wtag, cl$comm)
   }
 }
 
 sendToWorker.mpicluster <- function(cl, workerid, robj, ...) {
-  tag <- 11  # worker tag
-  mpi.send.Robj(robj, workerid, tag, cl$comm)
+  mpi.send.Robj(robj, workerid, cl$wtag, cl$comm)
 }
 
 recvFromAnyWorker.mpicluster <- function(cl, ...) {
-  tag <- 10  # master tag
   status <- 0
-  mpi.probe(mpi.any.source(), tag, cl$comm, status)
+  mpi.probe(mpi.any.source(), cl$mtag, cl$comm, status)
   srctag <- mpi.get.sourcetag(status)
   mpi.recv.Robj(srctag[1], srctag[2], cl$comm)
 }
@@ -232,9 +238,9 @@ recvFromAnyWorker.mpicluster <- function(cl, ...) {
 
 # this is called by the cluster workers to create an mpi cluster object
 openMPIcluster <- function(bcast=TRUE, comm=0, workerid=mpi.comm.rank(comm),
-                           verbose=FALSE) {
+                           verbose=FALSE, mtag=10, wtag=11) {
   obj <- list(comm=comm, workerCount=mpi.comm.size(comm),
-              workerid=workerid, verbose=verbose)
+              workerid=workerid, verbose=verbose, mtag=mtag, wtag=wtag)
   class(obj) <- if (bcast) {
     c('mpicluster', 'dompicluster')
   } else {
@@ -248,16 +254,13 @@ bcastRecvFromMaster.mpicluster <- function(cl, datalen, ...) {
 }
 
 bcastRecvFromMaster.nbmpicluster <- function(cl, datalen, ...) {
-  tag <- 11  # worker tag
-  unserialize(mpi.recv(raw(datalen), 4, 0, tag, cl$comm))
+  unserialize(mpi.recv(raw(datalen), 4, 0, cl$wtag, cl$comm))
 }
 
 sendToMaster.mpicluster <- function(cl, robj, ...) {
-  tag <- 10  # master tag
-  mpi.send.Robj(robj, 0, tag, cl$comm)
+  mpi.send.Robj(robj, 0, cl$mtag, cl$comm)
 }
 
 recvFromMaster.mpicluster <- function(cl, ...) {
-  tag <- 11  # worker tag
-  mpi.recv.Robj(0, tag, cl$comm)
+  mpi.recv.Robj(0, cl$wtag, cl$comm)
 }

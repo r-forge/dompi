@@ -31,6 +31,8 @@ local({
   verbose <- FALSE
   comm <- 3
   intercomm <- 4
+  mtag <- 10
+  wtag <- 11
 
   # process the command line
   for (arg in commandArgs(trailingOnly=TRUE)) {
@@ -62,6 +64,10 @@ local({
       comm <- as.integer(val)
     } else if (opt == 'INTERCOMM') {
       intercomm <- as.integer(val)
+    } else if (opt == 'MTAG') {
+      mtag <- as.integer(val)
+    } else if (opt == 'WTAG') {
+      wtag <- as.integer(val)
     } else {
       warning('ignoring unrecognized option: ', opt)
     }
@@ -180,7 +186,7 @@ local({
 
   # this is where all the work is done
   cl <- openMPIcluster(bcast=bcast, comm=comm, workerid=workerid,
-                       verbose=verbose)
+                       verbose=verbose, mtag=mtag, wtag=wtag)
   dompiWorkerLoop(cl, cores, verbose)
 
   # shutdown MPI

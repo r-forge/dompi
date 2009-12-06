@@ -11,7 +11,8 @@ also needs to be used in \code{doMPI} scripts that are started in
 non-spawn mode.
 }
 \usage{
-openMPIcluster(bcast=TRUE, comm=0, workerid=mpi.comm.rank(comm), verbose=FALSE)
+openMPIcluster(bcast=TRUE, comm=0, workerid=mpi.comm.rank(comm), verbose=FALSE,
+               mtag=10, wtag=11)
 }
 \arguments{
   \item{bcast}{Indicates if a true MPI broadcast should be used to send
@@ -25,6 +26,14 @@ openMPIcluster(bcast=TRUE, comm=0, workerid=mpi.comm.rank(comm), verbose=FALSE)
   \item{workerid}{}
   \item{verbose}{Indicates if verbose messages should be enabled.
   Defaults to \code{FALSE}.}
+  \item{mtag}{Tag to use for messages sent to the master.
+  Do not use this option unless you know what you're doing, or
+  your program will very likely hang.
+  Defaults to \code{10}.}
+  \item{wtag}{Tag to use for messages sent to the workers.
+  Do not use this option unless you know what you're doing, or
+  your program will very likely hang.
+  Defaults to \code{11}.}
 }
 \note{
 Make sure that \code{openMPIcluster} is called consistently with
