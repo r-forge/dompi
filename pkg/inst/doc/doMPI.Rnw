@@ -193,7 +193,10 @@ But don't be too surprised if someone suggests that you switch to Ubuntu.
 
 Once you can successfully load \texttt{doMPI}, the next step is to
 create an \texttt{MPI} cluster object.  There are lots of options, but
-here's one way to do that:
+here's one way to do that\footnote{I'm using the \texttt{count} argument
+because we're in an interactive R session.  However, in section 8, I'll
+explain why I don't recommend using the \texttt{count} argument for most
+other circumstances.}:
 
 <<eval=FALSE>>=
 cl <- startMPIcluster(count=2)
@@ -326,7 +329,7 @@ results in a matrix, as in the previous example, so we'll use
 <<fig=TRUE>>=
 x <- seq(-8, 8, by=0.5)
 v <- foreach(y=x, .combine="cbind") %dopar% {
-    r <- sqrt(x^2 + y^2 + .Machine$double.eps)
+    r <- sqrt(x^2 + y^2) + .Machine$double.eps
     sin(r) / r
 }
 persp(x, x, v)
@@ -351,7 +354,7 @@ As a comparison, let's write this program using the standard
 <<results=hide>>=
 x <- seq(-8, 8, by=0.5)
 sinc <- function(y) {
-    r <- sqrt(x^2 + y^2 + .Machine$double.eps)
+    r <- sqrt(x^2 + y^2) + .Machine$double.eps
     sin(r) / r
 }
 r <- lapply(x, sinc)
