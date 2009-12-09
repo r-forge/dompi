@@ -21,7 +21,7 @@ rforest <- function(x, y=NULL, xtest=NULL, ytest=NULL, ntree=500, ...) {
   }
 }
 
-# Create a matrix and factor for testing
+# Create a matrix and factor as input
 m <- 200; n <- 120
 x <- matrix(rnorm(m * n), m, n)
 y <- gl(10, m/10)
