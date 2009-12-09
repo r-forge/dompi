@@ -1,4 +1,4 @@
-# This is a parallel random forest example, using Andy Liaw's
+# This is a simple parallel random forest example, using Andy Liaw's
 # randomForest package.
 
 suppressMessages(library(doMPI))
@@ -16,8 +16,7 @@ rforest <- function(x, y=NULL, xtest=NULL, ytest=NULL, ntree=500, ...) {
   foreach(i=idiv(ntree, chunks=getDoParWorkers()),
           .combine='combine', .multicombine=TRUE, .inorder=FALSE,
           .options.mpi=opts) %dopar% {
-    randomForest:::randomForest.default(x=x, y=y, xtest=xtest, ytest=ytest,
-                                        ntree=i, ...)
+    randomForest:::randomForest.default(x, y, xtest, ytest, ntree=i, ...)
   }
 }
 
