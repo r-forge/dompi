@@ -85,7 +85,7 @@ master <- function(cl, expr, it, envir, packages, verbose, chunkSize, info,
 
   submitTaskChunk <- function(workerid, tid, job, joblen) {
     sprof <- startnode(paste('submitTaskChunk', workerid), prof)
-    argslist <- as.list(truncate(it, chunkSize))
+    argslist <- to.list(it, chunkSize)
     numtasks <- length(argslist)
     if (numtasks > 0) {
       sendToWorker(cl, workerid, 
@@ -230,21 +230,20 @@ master <- function(cl, expr, it, envir, packages, verbose, chunkSize, info,
   NULL
 }
 
-# this returns an iterator that returns no more than "n" values
-# from the specified iterator.
-truncate <- function(it, n) {
-  it <- iter(it)
+to.list <- function(x, n) {
+  a <- vector('list', length=n)
+  i <- 0
+  tryCatch({
+    while (i < n) {
+      a[i + 1] <- list(nextElem(x))
+      i <- i + 1
+    }
+  },
+  error=function(e) {
+    if (!identical(conditionMessage(e), 'StopIteration'))
+      stop(e)
+  })
 
-  nextEl <- function() {
-    if (n > 0)
-      n <<- n - 1
-    else
-      stop('StopIteration')
-
-    nextElem(it)
-  }
-
-  obj <- list(nextElem=nextEl)
-  class(obj) <- c('abstractiter', 'iter')
-  obj
+  length(a) <- i
+  a
 }
