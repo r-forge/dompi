@@ -10,16 +10,16 @@ suppressMessages(library(randomForest))
 suppressMessages(library(getopt))
 
 # Define a parallel randomForest function
-rforest <- function(x, y=NULL, ntree=500, importance=FALSE, ...,
+rforest <- function(x, y=NULL, xtest=NULL, ytest=NULL, ntree=500, ...,
                     profile=FALSE, forcePiggyback=FALSE, bcastThreshold=800) {
   initWorkers <- function() library(randomForest)
   opts <- list(profile=profile, forcePiggyback=forcePiggyback,
                bcastThreshold=bcastThreshold, initEnvir=initWorkers)
+
   foreach(i=idiv(ntree, chunks=getDoParWorkers()),
           .combine='combine', .multicombine=TRUE, .inorder=FALSE,
           .options.mpi=opts) %dopar% {
-    randomForest:::randomForest.default(x=x, y=y, ntree=i,
-                                        importance=importance, ...)
+    randomForest:::randomForest.default(x, y, xtest, ytest, ntree=i, ...)
   }
 }
 
