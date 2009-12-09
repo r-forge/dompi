@@ -6,8 +6,8 @@
 # TODO Document the usage
 
 suppressMessages(library(doMPI))
-suppressMessages(library(getopt))
 suppressMessages(library(randomForest))
+suppressMessages(library(getopt))
 
 # Define a parallel randomForest function
 rforest <- function(x, y=NULL, ntree=500, importance=FALSE, ...,
@@ -18,7 +18,8 @@ rforest <- function(x, y=NULL, ntree=500, importance=FALSE, ...,
   foreach(i=idiv(ntree, chunks=getDoParWorkers()),
           .combine='combine', .multicombine=TRUE, .inorder=FALSE,
           .options.mpi=opts) %dopar% {
-    randomForest(x=x, y=y, ntree=i, importance=importance, ...)
+    randomForest:::randomForest.default(x=x, y=y, ntree=i,
+                                        importance=importance, ...)
   }
 }
 
@@ -34,7 +35,7 @@ main <- function(args) {
                    'cols',      'n', '1', 'integer',
                    'ntree',     'r', '1', 'integer',
                    'importance','i', '0', 'logical'), ncol=4, byrow=TRUE)
-  options <- getopt(spec, opt=args, command='matmul.R')
+  options <- getopt(spec, opt=args, command='rforest.R')
   opt <- list(verbose=FALSE, profile=FALSE, emulate=FALSE,
               force=FALSE, threshold=800, cores=1, rows=200, cols=100,
               ntree=500, importance=FALSE)
@@ -65,12 +66,12 @@ main <- function(args) {
       cat(sprintf("Piggy-back/broadcast threshold is %d\n", opt$threshold))
     }
 
-    # Create some matrices
+    # Create a matrix and factor as input
     m <- opt$rows; n <- opt$cols
     x <- matrix(rnorm(m * n), m, n)
-    y <- gl(10, m/10)  # XXX hmm?
+    y <- gl(10, m/10)
 
-    # Execute matmul and report the time
+    # Execute rforest and report the time
     stime <- proc.time()[3]
     rfit <- rforest(x, y, ntree=opt$ntree, importance=opt$importance,
                     profile=opt$profile, forcePiggyback=opt$force,
