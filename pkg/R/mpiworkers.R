@@ -100,7 +100,13 @@ startMPIcluster <- function(count, verbose=FALSE, workdir=getwd(),
         }
 
         logfile <- file.path(logdir, wfile)
-        outfile <- if (verbose) logfile else "/dev/null"
+        outfile <- if (verbose) {
+          logfile
+        } else if (.Platform$OS.type == "windows") {
+          "nul:"
+        } else {
+          "/dev/null"
+        }
         sinkWorkerOutput(outfile)
 
         # Remove any .Last function, which is probably intended for the master
