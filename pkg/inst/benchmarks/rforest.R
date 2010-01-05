@@ -12,13 +12,27 @@ suppressMessages(library(getopt))
 # Define a parallel randomForest function
 rforest <- function(x, y=NULL, xtest=NULL, ytest=NULL, ntree=500, ...,
                     profile=FALSE, forcePiggyback=FALSE, bcastThreshold=800) {
-  initWorkers <- function() library(randomForest)
+  comm <- getDoMpiCluster()$comm
+  if (is.null(comm)) {
+    stop('error getting communicator')
+  }
+  winit <- function(envir, dimen, comm) {
+    library(randomForest)
+    envir$x <- mpi.bcast(double(dimen[1] * dimen[2]), 2, rank=0, comm=comm)
+    dim(envir$x) <- dimen
+  }
+  wargs=list(dimen=dim(x), comm=comm)
+  minit <- function() {
+    mpi.bcast(x, 2, rank=0, comm=comm)
+  }
   opts <- list(profile=profile, forcePiggyback=forcePiggyback,
-               bcastThreshold=bcastThreshold, initEnvir=initWorkers)
+               bcastThreshold=bcastThreshold,
+               initEnvir=winit, initArgs=wargs,
+               initEnvirMaster=minit)
 
   foreach(i=idiv(ntree, chunks=getDoParWorkers()),
           .combine='combine', .multicombine=TRUE, .inorder=FALSE,
-          .options.mpi=opts) %dopar% {
+          .noexport='x', .options.mpi=opts) %dopar% {
     randomForest:::randomForest.default(x, y, xtest, ytest, ntree=i, ...)
   }
 }

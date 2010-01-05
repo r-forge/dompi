@@ -46,8 +46,9 @@
 #
 
 master <- function(cl, expr, it, envir, packages, verbose, chunkSize, info,
-                   initEnvir, initArgs, finalEnvir, finalArgs, profile,
-                   bcastThreshold, forcePiggyback) {
+                   initEnvir, initArgs, initEnvirMaster, initArgsMaster,
+                   finalEnvir, finalArgs, profile, bcastThreshold,
+                   forcePiggyback) {
   # start profiling the foreach execution
   # XXX should require profiling to be enabled
   prof <- startnode('master')
@@ -174,6 +175,21 @@ master <- function(cl, expr, it, envir, packages, verbose, chunkSize, info,
   # remove xenvir so it can be garbage collected
   if (exists('xenvir', inherits=FALSE)) {
     rm(xenvir)
+  }
+
+  # if specified, execute initEnvirMaster
+  # which allows the master and workers to communicate
+  # XXX should I check that initEnvir is non-null?
+  if (!is.null(initEnvirMaster)) {
+    if (verbose)
+      cat('executing initEnvirMaster\n')
+
+    # include extra arguments if function takes arguments
+    if (length(formals(initEnvirMaster)) > 0) {
+      do.call(initEnvirMaster, c(list(envir), initArgsMaster))
+    } else {
+      initEnvirMaster()
+    }
   }
 
   # wait for results, and submit new tasks to the workers that return them
