@@ -3,6 +3,12 @@
 # the length of time to compute the estimate.  It is also
 # yet another demonstration of using vector operations within
 # a foreach loop.
+#
+# Note: This example will not work with the doMC or doSNOW
+# parallel backends.  It only works with backends that submit
+# tasks lazily, such as doMPI.  If used with "greedy" backends,
+# like doMC or doSNOW, they could attempt to submit a huge number
+# of tasks, resulting in some sort of nasty memory problems.
 
 suppressMessages(library(doMPI))
 suppressMessages(library(itertools))
