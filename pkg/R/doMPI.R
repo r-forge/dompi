@@ -249,8 +249,14 @@ doMPI <- function(obj, expr, envir, data) {
     # exported, such as the size of the objects
   }
 
+  # compile the expression if we can load the compiler package
+  xpr <- if (suppressWarnings(require('compiler', quietly=TRUE)))
+    compile(expr, env=envir, options=list(suppressUndefined=TRUE))
+  else
+    expr
+
   # execute the tasks
-  master(cl, expr, it, exportenv, obj$packages, obj$verbose, chunkSize, info,
+  master(cl, xpr, it, exportenv, obj$packages, obj$verbose, chunkSize, info,
          initEnvir, initArgs, initEnvirMaster, initArgsMaster,
          finalEnvir, finalArgs, profile, bcastThreshold, forcePiggyback)
 
