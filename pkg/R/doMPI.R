@@ -37,6 +37,12 @@ makeDotsEnv <- function(...) {
   function() NULL
 }
 
+comp <- if (getRversion() < "2.13.0") {
+  function(expr, ...) expr
+} else {
+  compiler::compile
+}
+
 doMPI <- function(obj, expr, envir, data) {
   cl <- data
 
@@ -249,11 +255,8 @@ doMPI <- function(obj, expr, envir, data) {
     # exported, such as the size of the objects
   }
 
-  # compile the expression if we can load the compiler package
-  xpr <- if (suppressWarnings(require('compiler', quietly=TRUE)))
-    compile(expr, env=envir, options=list(suppressUndefined=TRUE))
-  else
-    expr
+  # compile the expression if we're using R 2.13.0 or greater
+  xpr <- comp(expr, env=envir, options=list(suppressUndefined=TRUE))
 
   # execute the tasks
   master(cl, xpr, it, exportenv, obj$packages, obj$verbose, chunkSize, info,
