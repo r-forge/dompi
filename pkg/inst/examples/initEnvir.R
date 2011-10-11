@@ -3,9 +3,19 @@
 # use an object that can't be simply exported, such as connection
 # objects.
 #
-# The function specified by the initEnvir option can be passed the
-# worker's execution environment, plus extra arguments specified
-# by the initArgs option.
+# The function specified by the initEnvir option is passed the
+# worker's execution environment, plus any arguments specified
+# via the initArgs option.
+#
+# In this example, I demonstrate how initEnvir and finalEnvir
+# can be used to create a file for each of the workers that
+# can be accessed via the variable "out".  This can be used
+# to write task results from the workers without opening and
+# closing the file for each task, and without conflicts
+# between the different workers.  This technique is particularly
+# useful if the job is executed from an NFS directory, so that
+# all of the files are accessible by the user at the end of
+# the job.
 
 suppressMessages(library(doMPI))
 
