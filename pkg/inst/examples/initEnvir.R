@@ -15,15 +15,15 @@ registerDoMPI(cl)
 
 # Create an output file that the workers can write to using
 # the variable "out"
-initEnvir <- function(envir, template) {
-  rank <- mpi.comm.rank()
+initEnvir <- function(envir, template, comm) {
+  rank <- mpi.comm.rank(comm)
   fname <- sprintf(template, rank)
   envir$out <- file(fname, 'w')
   cat(sprintf('This is the output file for worker %d\n', rank), file=envir$out)
 }
 
 # Pass the template of the output file name to the initEnvir function
-initArgs <- list(template='worker_%d.out')
+initArgs <- list(template='worker_%d.out', comm=cl$comm)
 
 # Close the output file at the end of the foreach loop
 finalEnvir <- function(envir) {
