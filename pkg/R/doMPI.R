@@ -52,6 +52,7 @@ doMPI <- function(obj, expr, envir, data) {
   profile <- FALSE
   bcastThreshold <- 800  # XXX not sure of a good default value
   forcePiggyback <- FALSE
+  nocompile <- FALSE
 
   if (!inherits(obj, 'foreach'))
     stop('obj must be a foreach object')
@@ -66,7 +67,8 @@ doMPI <- function(obj, expr, envir, data) {
                         'initEnvir', 'initArgs',
                         'initEnvirMaster', 'initArgsMaster',
                         'finalEnvir', 'finalArgs',
-                        'profile', 'bcastThreshold', 'forcePiggyback')
+                        'profile', 'bcastThreshold', 'forcePiggyback',
+                        'nocompile')
     if (any(!recog))
       warning(sprintf('ignoring unrecognized mpi option(s): %s',
                       paste(nms[!recog], collapse=', ')), call.=FALSE)
@@ -196,6 +198,16 @@ doMPI <- function(obj, expr, envir, data) {
         forcePiggyback <- options$forcePiggyback
       }
     }
+
+    if (!is.null(options$nocompile)) {
+      if (!is.logical(options$nocompile) || length(options$nocompile) != 1) {
+        warning('nocompile must be a logical value', call.=FALSE)
+      } else {
+        if (obj$verbose)
+          cat(sprintf('setting nocompile option to %s\n', options$nocompile))
+        nocompile <- options$nocompile
+      }
+    }
   }
 
   # setup the parent environment by first attempting to create an environment
@@ -249,8 +261,11 @@ doMPI <- function(obj, expr, envir, data) {
     # exported, such as the size of the objects
   }
 
-  # compile the expression
-  xpr <- compile(expr, env=envir, options=list(suppressUndefined=TRUE))
+  # compile the expression unless nocompile is true
+  xpr <- if (nocompile)
+    expr
+  else
+    compile(expr, env=envir, options=list(suppressUndefined=TRUE))
 
   # execute the tasks
   master(cl, xpr, it, exportenv, obj$packages, obj$verbose, chunkSize, info,

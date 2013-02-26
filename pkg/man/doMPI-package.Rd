@@ -30,6 +30,7 @@ There are several backend-specific options that can be specified when using
 \code{profile} \tab Display profiling information from the master's point of view\cr
 \code{bcastThreshold} \tab Used to decide whether to piggy-back or broadcast job data\cr
 \code{forcePiggyback} \tab Always piggy-back job environment with first task to each worker\cr
+\code{nocompile} \tab Don't compile the R expression\cr
 }
 
 The \code{chunkSize} option is particularly important, since it can be
