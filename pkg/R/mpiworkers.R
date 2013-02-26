@@ -120,7 +120,7 @@ startMPIcluster <- function(count, verbose=FALSE, workdir=getwd(),
         } else {
           cl <- openMPIcluster(bcast=bcast, comm=comm, workerid=rank,
                                mtag=mtag, wtag=wtag)
-          cores <- if (suppressWarnings(require(multicore, quietly=TRUE))) {
+          cores <- if (suppressWarnings(require(parallel, quietly=TRUE))) {
             maxcores
           } else {
             1

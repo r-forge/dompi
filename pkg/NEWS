@@ -1,6 +1,12 @@
 NEWS/ChangeLog for doMPI
 ------------------------
 
+0.1-6	2013-2-XX
+    o	removed nws support
+    o	add compiler support
+    o	switched from multicore to parallel
+    o	improved variable exporting support
+
 0.1-5	2010-8-9
     o	fixed "R CMD check" warning reported by Kurt Hornik
 

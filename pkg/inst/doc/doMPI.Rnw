@@ -162,10 +162,7 @@ install.packages("doMPI", dependencies=TRUE)
 @
 
 That will also install packages such as \texttt{foreach} and
-\texttt{iterators}.  You may also want to install the \texttt{multicore}
-package, which can be used by \texttt{doMPI}, but it is not required.
-Oddly enough, it's also possible to use \texttt{doMPI} with the
-\texttt{nws} package, but again, it's not required.
+\texttt{iterators}.
 
 \section{Getting Started}
 

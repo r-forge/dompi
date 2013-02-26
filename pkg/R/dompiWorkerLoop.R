@@ -173,6 +173,10 @@ jobInitialize <- function(envir) {
     # fix the parent environment of the execution environment
     parent.env(envir) <- globalenv()
 
+    # This isn't always necessary, but is useful when exported
+    # functions call exported functions
+    attach(envir, name='dompiExports')
+
     # execute the "initEnvir" function if specified
     ienv <- get('.$initEnvir', pos=envir)
     if (!is.null(ienv)) {
@@ -236,6 +240,7 @@ jobCleanup <- function(envir) {
         signalCondition(e)
       })
     }
+    detach(name='dompiExports')
   },
   error=function(e) {
     cat(sprintf('error executing finalEnvir: %s\n', conditionMessage(e)))
