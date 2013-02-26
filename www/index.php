@@ -46,11 +46,11 @@ This allows it to do more, and (hopefully) execute more efficiently.
   <li>Data that is common to all tasks can be broadcast to the cluster workers,
       or piggy-backed with the first task to the workers.</li>
   <li>It is easy to write scripts that can be executed interactively or in
-      batch mode using mpirun/orterun.</li>
+      batch mode using mpirun.</li>
   <li>A chunkSize option is supported to increase the task granularity for
       better performance.</li>
   <li>If chunkSize is used, and a cluster worker has multiple cores, the mclapply
-      function from the 'multicore' package can be used to execute the tasks in parallel,
+      function from the 'parallel' package can be used to execute the tasks in parallel,
       thus enabling hybrid parallelism.</li>
   <li>An arbitrarily large number of tasks can be executed, since task arguments
       are not fetched until they are ready to be submitted, and results are
