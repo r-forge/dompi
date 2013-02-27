@@ -57,6 +57,7 @@ This allows it to do more, and (hopefully) execute more efficiently.
       processed as they are returned.</li>
   <li>Backend-specific options for initializing and finalizing the worker execution
       environments.</li>
+  <li>Support for parallel random number generation.</li>
 </ul>
 </p>
 
