@@ -83,6 +83,10 @@ value is \code{FALSE}, the data may still be piggy-backed, but it is not
 guaranteed.  In general, the job data is only piggy-backed if it is
 relatively small.  The default value is \code{FALSE}.
 
+The \code{nocompile} option is used to disable compilation of the
+R expression in the body of the foreach loop.  The default value is
+\code{FALSE}.
+
 Additional documentation is available on the following functions:
 
 \tabular{ll}{
