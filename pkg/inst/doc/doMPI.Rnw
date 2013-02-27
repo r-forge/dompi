@@ -447,7 +447,7 @@ Now let's try some examples.  Here's an example that will run the
 script ``sincMPI.R'' using two workers:
 
 \begin{verbatim}
-% mpirun -H localhost,n2,n3 R --slave -f sincMPI.R
+$ mpirun -H localhost,n2,n3 R --slave -f sincMPI.R
 \end{verbatim}
 
 The \texttt{mpirun} command will run the \texttt{R} interpreter on
@@ -474,7 +474,7 @@ include those nodes in the \texttt{MPI} ``universe'', so that
 \texttt{startMPIcluster} will be able to spawn processes to them:
 
 \begin{verbatim}
-% mpirun -H n1,n2,n3 -n 1 R --slave -f sincMPI.R
+$ mpirun -H n1,n2,n3 -n 1 R --slave -f sincMPI.R
 \end{verbatim}
 
 Because we specified \texttt{-n 1}, the \texttt{mpirun} command only
@@ -497,7 +497,7 @@ Here's a final example that starts multiple processes on the hosts using
 ``non-spawn'' mode:
 
 \begin{verbatim}
-% mpirun -H localhost,n2,n3 -n 6 R --slave -f sincMPI.R
+$ mpirun -H localhost,n2,n3 -n 6 R --slave -f sincMPI.R
 \end{verbatim}
 
 This will start two processes on each of the hosts for a total of six
