@@ -3,14 +3,15 @@
 \title{Set RNG}
 \description{
 The \code{setDoMpiRNG} function is used to use parallel random number
-generation on the specified cluster.
+generation on the specified cluster.  It uses the L'Ecuyer-CMRG
+support in the base and parallel packages.
 }
 \usage{
-setDoMpiRNG(cl, seed)
+setDoMpiRNG(cl, seed=NULL)
 }
 \arguments{
-  \item{cl}{The cluster object.}
-  \item{seed}{Optional seed.}
+  \item{cl}{The cluster to initialize.}
+  \item{seed}{Passed to \code{set.seed} if not \code{NULL}.}
 }
 \examples{
 \dontrun{
