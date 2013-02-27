@@ -1,4 +1,4 @@
-setDoMpiRNG <- function(cl, seed) {
+setDoMpiRNG <- function(cl, seed=NULL) {
   # save the current value of .Random.seed so it can be restored
   if (exists('.Random.seed', where=globalenv(), inherits=FALSE))
     saveseed <- get('.Random.seed', pos=globalenv(), inherits=FALSE)
@@ -9,8 +9,8 @@ setDoMpiRNG <- function(cl, seed) {
   # to send to the workers
   saverng <- RNGkind("L'Ecuyer-CMRG")
 
-  # set the seed if specified
-  if (! missing(seed))
+  # call set.seed if seed is not NULL
+  if (!is.null(seed))
     set.seed(seed)
 
   # send a .Random.seed value to each worker
