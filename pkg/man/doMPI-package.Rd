@@ -94,6 +94,7 @@ Additional documentation is available on the following functions:
 \code{registerDoMPI} \tab Register a cluster object to be used with \%dopar\%\cr
 \code{closeCluster} \tab Shutdown and close a cluster object\cr
 \code{clusterSize} \tab Return the number of workers associated with a cluster object\cr
+\code{setDoMpiRNG} \tab Initialize parallel random number generation on a cluster\cr
 }
 
 For a complete list of functions with individual help pages,
