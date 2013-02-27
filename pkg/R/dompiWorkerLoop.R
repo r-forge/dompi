@@ -67,6 +67,21 @@ dompiWorkerLoop <- function(cl, cores=1, verbose=FALSE) {
       break
     }
 
+    # check if this is an PRNG job
+    if (!is.null(taskchunk$seed)) {
+      logger('got a PRNG job')
+      if (injob) {
+        logger('cleaning up after job %d before initializing PRNG', jid)
+        jobCleanup(envir)
+        envir <- NULL
+        injob <- FALSE
+      }
+
+      RNGkind("L'Ecuyer-CMRG")
+      assign('.Random.seed', taskchunk$seed, envir=globalenv())
+      next
+    }
+
     # check if this is the start of a new job
     if (taskchunk$joblen > 0 || !is.null(taskchunk$job)) {
       if (injob) {

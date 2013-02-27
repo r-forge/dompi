@@ -3,6 +3,7 @@ NEWS/ChangeLog for doMPI
 
 0.1-6	2013-2-XX
     o	require R 2.14.0 or newer
+    o	added parallel random number generation support
     o	added compiler support and "nocompile" option to disable it
     o	switched from multicore to parallel package
     o	improved variable exporting support

@@ -54,7 +54,7 @@ master <- function(cl, expr, it, envir, packages, verbose, chunkSize, info,
   prof <- startnode('master')
 
   # choose a random id for this job for sanity checking
-  jid <- sample(1000000, 1)
+  jid <- sample(1000000, 1)  # XXX should this be using the RNG?
 
   # set the enclosing environment of initEnvir and finalEnvir to
   # be the execution environment
