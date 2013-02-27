@@ -110,8 +110,7 @@ computers, and then you have to build and install \texttt{Rmpi} to use
 that \texttt{MPI} installation.  That is where many people run into
 problems, particularly on Windows.  However, on Debian / Ubuntu, it is
 very easy to install \texttt{Open MPI}, and \texttt{Rmpi} works quite
-well with it.  Mac~OS~X~10.5 and later includes \texttt{Open MPI} with
-the developer tools, and \texttt{Rmpi} works well there, also.
+well with it.
 
 Another thing to be aware of is that you have to run your \texttt{R}
 programs differently in order to execute on multiple computers, and the
@@ -120,8 +119,8 @@ you just start a normal \texttt{R} session, your workers will only run
 on your local machine.  That's great for testing, but the point of using
 \texttt{doMPI} is to execute on multiple computers.  To do that, you'll
 need to start your \texttt{R} session using a command such as
-\texttt{orterun}, \texttt{mpirun}, or \texttt{mpiexec}, depending on
-your \texttt{MPI} installation.
+\texttt{mpirun} or \texttt{mpiexec}, depending on your \texttt{MPI}
+installation.
 
 Hopefully, this document will help you to get started, but it primarily
 deals with programming issues, not configuring or administering
@@ -142,18 +141,15 @@ Ubuntu, you can actually install \texttt{Rmpi} by using \texttt{apt-get}
 to install the Debian \texttt{r-cran-rmpi} package.  That's the most
 fool-proof way to install \texttt{Rmpi} on Ubuntu, for example, since
 \texttt{apt-get} will automatically install a compatible version of
-\texttt{MPI}, if necessary.  But on other systems, including Mac~OS~X,
-you can install it with:
+\texttt{MPI}, if necessary.  But on other systems you can install it
+with:
 
 <<eval=FALSE>>=
 install.packages("Rmpi")
 @
 
 As I mentioned, if you have problems, I strongly recommend the R-sig-hpc
-mailing list if you don't have a local expert.  I'm certainly not an expert on
-installing \texttt{Rmpi}, since I've only installed it on Ubuntu and
-Mac~OS~X, where, as I said, it's easy to install.\footnote{Am I being
-too subtle here?}
+mailing list if you don't have a local expert.
 
 Once \texttt{Rmpi} is installed, the rest should be easy:
 
@@ -238,7 +234,7 @@ And finally, you should probably call \texttt{mpi.quit} to exit your
 interactively during testing.  Both of these functions will ``finalize''
 \texttt{MPI}, which is a requirement for \texttt{MPI} programs.  I'm not
 sure what the consequences are of not finalizing \texttt{MPI}, but I
-have seen error messages from \texttt{orterun} when I forgot to
+have seen error messages from \texttt{mpirun} when I forgot to
 finalize.
 
 \section{A simple example}
@@ -419,15 +415,11 @@ the \texttt{doMPI} package.
 
 To execute \texttt{doMPI} scripts on multiple computers, you need to
 execute the \texttt{R} interpreter using a command such as
-\texttt{mpirun}, \texttt{mpiexec}, or in the case of \texttt{Open MPI},
-\texttt{orterun}\footnote{There could be another way to run on multiple
-computers, but I haven't figured it out.  But I had a hard time finding
-documentation on this subject, especially in the context of
-\texttt{Rmpi}.}.  Since I've only used \texttt{Open MPI}, I'll only
-discuss the use of \texttt{orterun}, although it should be pretty simple
-to translate my instructions for other implementations.
+\texttt{mpirun} or \texttt{mpiexec}.  In this vignette, I'll only
+discuss the Open MPI version of \texttt{mpirun}, although it should be
+pretty simple to translate my instructions for other implementations.
 
-When you execute \texttt{orterun}, you can specify the hosts to use
+When you execute \texttt{mpirun}, you can specify the hosts to use
 as a comma-separated list using the \texttt{-H} or \texttt{-host}
 option, or by specifying a ``host file'' using the \texttt{-hostfile}
 option.  You can also use the \texttt{-n} or \texttt{-np} option to
@@ -438,7 +430,7 @@ function when you execute \texttt{startMPIcluster}.  If you specify
 that more than one copy of your script should be executed on those
 hosts, then \texttt{doMPI} will
 not spawn workers, assuming that you have started all of the workers that
-you wanted using \texttt{orterun}\footnote{Actually,
+you wanted using \texttt{mpirun}\footnote{Actually,
 \texttt{startMPIcluster} will always spawn workers unless the \texttt{comm}
 argument is \texttt{0}, but \texttt{comm} defaults to \texttt{0} if
 \texttt{mpi.comm.size(0)} is greater than one.  See the documentation on
@@ -455,10 +447,10 @@ Now let's try some examples.  Here's an example that will run the
 script ``sincMPI.R'' using two workers:
 
 \begin{verbatim}
-% orterun -H localhost,n2,n3 R --slave -f sincMPI.R
+% mpirun -H localhost,n2,n3 R --slave -f sincMPI.R
 \end{verbatim}
 
-The \texttt{orterun} command will run the \texttt{R} interpreter on
+The \texttt{mpirun} command will run the \texttt{R} interpreter on
 ``localhost'', ``n2'', and ``n3'', and \texttt{R} will execute the
 script named ``sincMPI.R'' in the current directory.  \texttt{sincMPI.R}
 is an example that comes in the \texttt{doMPI} package, so you can try
@@ -482,10 +474,10 @@ include those nodes in the \texttt{MPI} ``universe'', so that
 \texttt{startMPIcluster} will be able to spawn processes to them:
 
 \begin{verbatim}
-% orterun -H n1,n2,n3 -n 1 R --slave -f sincMPI.R
+% mpirun -H n1,n2,n3 -n 1 R --slave -f sincMPI.R
 \end{verbatim}
 
-Because we specified \texttt{-n 1}, the \texttt{orterun} command only
+Because we specified \texttt{-n 1}, the \texttt{mpirun} command only
 starts one copy of the \texttt{R} interpreter running.
 \texttt{startMPIcluster} will then spawn two workers, since it notices
 that \texttt{mpi.universe.size()} is three.  They will execute on hosts
@@ -505,7 +497,7 @@ Here's a final example that starts multiple processes on the hosts using
 ``non-spawn'' mode:
 
 \begin{verbatim}
-% orterun -H localhost,n2,n3 -n 6 R --slave -f sincMPI.R
+% mpirun -H localhost,n2,n3 -n 6 R --slave -f sincMPI.R
 \end{verbatim}
 
 This will start two processes on each of the hosts for a total of six
@@ -519,7 +511,7 @@ In general, I'd suggest not using the \texttt{startMPIcluster}
 \texttt{count} argument unless you're doing something fancy, like
 creating multiple clusters.  I think that's the best method, since it
 let's you control the number of workers strictly from the
-\texttt{orterun} command, which is what we've been doing in all of these
+\texttt{mpirun} command, which is what we've been doing in all of these
 examples.  But if you do specify a value for \texttt{count} while in
 ``non-spawn'' mode, it's got to be equal to \texttt{mpi.comm.size(0) -
 1}, or \texttt{startMPIcluster} will issue an error.  That's one reason
