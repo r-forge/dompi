@@ -19,6 +19,3 @@ Rmpi related issues:
 
 - Should mpi.get.processor.name be used rather than Sys.info()[['nodename']] to
   determine a node id?
-
-- Can mpi.setup.rngstream and mpi.setup.sprng be used to support
-  distributed random number generation?
