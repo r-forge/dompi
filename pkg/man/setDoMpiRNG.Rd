@@ -1,13 +1,13 @@
-\name{setDoMpiRNG}
-\alias{setDoMpiRNG}
+\name{setRngDoMPI}
+\alias{setRngDoMPI}
 \title{Set RNG}
 \description{
-The \code{setDoMpiRNG} function is used to use parallel random number
+The \code{setRngDoMPI} function is used to use parallel random number
 generation on the specified cluster.  It uses the L'Ecuyer-CMRG
 support in the base and parallel packages.
 }
 \usage{
-setDoMpiRNG(cl, seed=NULL)
+setRngDoMPI(cl, seed=NULL)
 }
 \arguments{
   \item{cl}{The cluster to initialize.}
@@ -16,7 +16,7 @@ setDoMpiRNG(cl, seed=NULL)
 \examples{
 \dontrun{
 cl <- startMPIcluster(count=2)
-setDoMpiRNG(cl, seed=1234)
+setRngDoMPI(cl, seed=1234)
 }
 }
 \keyword{utilities}

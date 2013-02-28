@@ -1,6 +1,6 @@
 # This example shows how to setup the cluster workers
 # to use parallel random number generation using the
-# new setDoMpiRNG function.
+# new setRngDoMPI function.
 
 suppressMessages(library(doMPI))
 
@@ -11,7 +11,7 @@ registerDoMPI(cl)
 # Check if we get "repeatable" results
 for (n in 1:3) {
   # Initialize parallel RNG
-  setDoMpiRNG(cl, seed=1234)
+  setRngDoMPI(cl, seed=1234)
 
   # Execute a foreach loop that uses random numbers
   r <- foreach(i=icount(clusterSize(cl)), .combine='c') %dopar% {

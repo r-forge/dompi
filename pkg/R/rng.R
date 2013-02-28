@@ -1,4 +1,4 @@
-setDoMpiRNG <- function(cl, seed=NULL) {
+setRngDoMPI <- function(cl, seed=NULL) {
   # save the current value of .Random.seed so it can be restored
   if (exists('.Random.seed', where=globalenv(), inherits=FALSE))
     saveseed <- get('.Random.seed', pos=globalenv(), inherits=FALSE)
