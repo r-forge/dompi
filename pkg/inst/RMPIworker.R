@@ -1,5 +1,5 @@
 #
-# Copyright (c) 2009, Stephen B. Weston
+# Copyright (c) 2009--2013, Stephen B. Weston
 #
 # This is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License as published
@@ -111,7 +111,8 @@ local({
 
   # open a worker log file
   outfile <- if (verbose) {
-    outname <- sprintf('MPI_%d_%s.log', workerid, Sys.info()[['user']])
+    outname <- sprintf('MPI_%d_%s_%d.log', workerid,
+                       Sys.info()[['user']], Sys.getpid())
     file.path(logdir, outname)
   } else {
     '/dev/null'
