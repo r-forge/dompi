@@ -29,9 +29,9 @@ for (n in 1:3) {
   setRngDoMPI(cl, seed=42)
 
   r <- foreach(sleep=irunif(1, max=5, count=4 * clusterSize(cl)),
-               .combine='c') %dopar% {
+               .combine='rbind') %dopar% {
     Sys.sleep(sleep)
-    paste(mpi.comm.rank(0), ': ', as.integer(runif(1, max=1000)), sep='')
+    data.frame(rank=mpi.comm.rank(0), result=as.integer(runif(1, max=1000)))
   }
   print(r)
 }
