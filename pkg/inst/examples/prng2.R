@@ -16,17 +16,16 @@ initEnvir <- function(envir) RNGkind("L'Ecuyer-CMRG")
 mpiopts <- list(initEnvir=initEnvir)
 
 # Verify that we get repeatable results
-for (n in 1:4) {
-  # Execute a foreach loop that uses random numbers
-  r <- foreach(sleep=irunif(1, max=5, count=18), seed=iRNGSubStream(42),
-               .combine='c', .options.mpi=mpiopts) %dopar% {
-    assign('.Random.seed', seed, pos=.GlobalEnv)
-    Sys.sleep(sleep)  # Randomize task length
-    as.integer(runif(1, max=1000))
-  }
+r <-
+  foreach(1:4, .combine='cbind') %:%
+    foreach(sleep=irunif(1, max=5, count=18), seed=iRNGSubStream(42),
+            .combine='c', .options.mpi=mpiopts) %dopar% {
+      assign('.Random.seed', seed, pos=.GlobalEnv)
+      Sys.sleep(sleep)  # Randomize task length
+      as.integer(runif(1, max=1000))
+    }
 
-  print(r)
-}
+print(r)
 
 # Shutdown the cluster and quit
 closeCluster(cl)
