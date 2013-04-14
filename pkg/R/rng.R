@@ -15,14 +15,17 @@ setRngDoMPI <- function(cl, seed=NULL) {
 
   tryCatch({
     # call set.seed if seed is not NULL
-    if (! is.null(seed))
+    s <- if (! is.null(seed)) {
       set.seed(seed)
+      get('.Random.seed', pos=globalenv(), inherits=FALSE)
+    } else {
+      nextRNGStream(get('.Random.seed', pos=globalenv(), inherits=FALSE))
+    }
 
     # send a .Random.seed value to each worker in the cluster
-    s <- get('.Random.seed', pos=globalenv(), inherits=FALSE)
     for (i in seq(length=clusterSize(cl))) {
-      s <- nextRNGStream(s)
       sendToWorker(cl, i, list(seed=s))
+      s <- nextRNGStream(s)
     }
   },
   finally={
