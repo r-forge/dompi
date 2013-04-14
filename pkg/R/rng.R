@@ -9,7 +9,9 @@ setRngDoMPI <- function(cl, seed=NULL) {
 
   # set RNG to L'Ecuyer in order to generate .Random.seed values
   # to send to the workers, saving the previous value
-  saverng <- RNGkind("L'Ecuyer-CMRG")
+  saverng <- RNGkind()
+  if (saverng[1] != "L'Ecuyer-CMRG")
+    RNGkind("L'Ecuyer-CMRG")
 
   tryCatch({
     # call set.seed if seed is not NULL
