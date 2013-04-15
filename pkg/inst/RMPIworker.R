@@ -20,6 +20,7 @@ local({
   # load all packages that we need explicitly to avoid messages to stdout
   suppressMessages(library(methods))  # because we're using Rscript
   suppressMessages(library(doMPI))
+  library(parallel)
 
   # set default option values
   tempdir <- Sys.getenv('TMPDIR', '/tmp')
