@@ -41,6 +41,26 @@ mklogger <- function(verbose, out=stdout()) {
 }
 
 # toplevel worker function
+#
+# Note that this function calls the "attach" function as part of a
+# strategy for exporting variables and functions from the user's program
+# to the cluster workers.  It uses the distinctive name "dompiExports"
+# when attaching it to the search path, as recommended.  Each time a new
+# "job" is executed (where a "job" roughly corresponds to a foreach
+# loop), the corresponding user variables are attached, and they are
+# detached when that job finishes.  This process may happen many times
+# during the execution of the "dompiWorkerLoop" function, but it will be
+# detached by the time it eventually returns.  In that sense, this
+# function follows "Good practice" as described on the "attach" man page
+# even though it doesn't call "detach" via "on.exit", which isn't really
+# appropriate in this case.
+#
+# Also note that the situation is turned around from normal, in that
+# the user never calls "dompiWorkerLoop": it is dompiWorkerLoop that
+# calls functions that are sent to it by the user.  dompiWorkerLoop
+# only returns when the corresponding cluster object is shutdown, and
+# at that point, the R session exits.
+#
 dompiWorkerLoop <- function(cl, cores=1, verbose=FALSE) {
   logger <- mklogger(verbose)
   logger('starting worker loop: cores = %d', cores)
