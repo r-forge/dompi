@@ -88,8 +88,20 @@ The \code{nocompile} option is used to disable compilation of the
 R expression in the body of the foreach loop.  The default value is
 \code{FALSE}.
 
-The \code{seed} option provides a mechanism for specifying getting
-repeatable results.  XXX
+The \code{seed} option is used for achieving reproducible results.  If
+set to a single numeric value, such as \code{27}, it is converted to a
+value that can be passed to the \code{nextRNGSubStream} function from
+the \pkg{parallel} package.  This value is assigned to the global
+\code{.Random.seed} variable on some cluster worker when it executes the
+first task (or task chunk).  The \code{nextRNGSubStream} function is
+used to generate subsequent values that are assigned to
+\code{.Random.seed} when executing subsequent tasks.  Thus, RNG
+substreams are associated with tasks, rather than workers.
+This is necessary for reproducible results, since the \pkg{doMPI}
+package uses load balancing techniques that can result in different
+tasks being executed by different workers on different runs of the same
+\code{foreach} loop.  The default value of the \code{seed} option is
+\code{NULL}.
 
 Additional documentation is available on the following functions:
 
