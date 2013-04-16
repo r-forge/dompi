@@ -10,13 +10,10 @@ RNG support provided by the \pkg{base} and \pkg{parallel} packages.
 
 Note that the goal of \code{setRngDoMPI} is to insure that the cluster
 workers each generate different streams of random numbers, not to
-insure repeatable results.  Repeatable results are problematic since
-tasks are assigned to the cluster workers as they return previous
-results.  This can be very important for achieving good performance,
-but it means that a given task may be executed by a different worker
-at different times, and therefore will be executed with different
-random data.  See the prng.R and prng2.R files in the examples directory
-for more information on this subject.
+insure repeatable results.  For repeatable results, use the
+doMPI-specific \code{seed} option via the \pkg{foreach}
+\code{.options.mpi} argument.  See \code{\link{doMPI-package}} for
+more information.
 
 This function follows the outline presented in section 6 of
 the vignette for the \pkg{parallel} package written by R-Core.
@@ -33,7 +30,7 @@ setRngDoMPI(cl, seed=NULL)
     executed by the same cluster workers.}
 }
 \seealso{
-  \code{\link{startMPIcluster}},
+  \code{\link{doMPI-package}}, \code{\link{startMPIcluster}},
   \code{\link[parallel]{nextRNGStream}}, \code{\link{RNG}}
 }
 \examples{
