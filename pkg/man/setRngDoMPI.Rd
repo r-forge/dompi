@@ -7,6 +7,11 @@ The \code{setRngDoMPI} function initializes the workers
 of a doMPI cluster to use parallel random number generation.
 To do this, it uses the \code{"L'Ecuyer-CMRG"}
 RNG support provided by the \pkg{base} and \pkg{parallel} packages.
+Specifically, the \code{nextRNGStream} function is used to assign
+each worker in the cluster to a different stream of random numbers.
+
+This function follows the outline presented in section 6 of
+the vignette for the \pkg{parallel} package written by R-Core.
 
 Note that the goal of \code{setRngDoMPI} is to insure that the cluster
 workers each generate different streams of random numbers, not to
@@ -14,9 +19,6 @@ insure repeatable results.  For repeatable results, use the
 doMPI-specific \code{seed} option via the \pkg{foreach}
 \code{.options.mpi} argument.  See \code{\link{doMPI-package}} for
 more information.
-
-This function follows the outline presented in section 6 of
-the vignette for the \pkg{parallel} package written by R-Core.
 }
 \usage{
 setRngDoMPI(cl, seed=NULL)
