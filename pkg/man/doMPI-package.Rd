@@ -31,6 +31,7 @@ There are several backend-specific options that can be specified when using
 \code{bcastThreshold} \tab Used to decide whether to piggy-back or broadcast job data\cr
 \code{forcePiggyback} \tab Always piggy-back job environment with first task to each worker\cr
 \code{nocompile} \tab Don't compile the R expression\cr
+\code{seed} \tab Starting seed for tasks\cr
 }
 
 The \code{chunkSize} option is particularly important, since it can be
@@ -86,6 +87,9 @@ relatively small.  The default value is \code{FALSE}.
 The \code{nocompile} option is used to disable compilation of the
 R expression in the body of the foreach loop.  The default value is
 \code{FALSE}.
+
+The \code{seed} option provides a mechanism for specifying getting
+repeatable results.  XXX
 
 Additional documentation is available on the following functions:
 

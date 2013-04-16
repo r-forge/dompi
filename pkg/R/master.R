@@ -48,7 +48,7 @@
 master <- function(cl, expr, it, envir, packages, verbose, chunkSize, info,
                    initEnvir, initArgs, initEnvirMaster, initArgsMaster,
                    finalEnvir, finalArgs, profile, bcastThreshold,
-                   forcePiggyback) {
+                   forcePiggyback, chunkseed) {
   # start profiling the foreach execution
   # XXX should require profiling to be enabled
   prof <- startnode('master')
@@ -91,7 +91,12 @@ master <- function(cl, expr, it, envir, packages, verbose, chunkSize, info,
     if (numtasks > 0) {
       sendToWorker(cl, workerid, 
                    list(argslist=argslist, numtasks=numtasks, tid=tid, jid=jid,
-                        jobcomplete=FALSE, job=job, joblen=joblen))
+                        jobcomplete=FALSE, job=job, joblen=joblen,
+                        chunkseed=chunkseed))
+      # Update chunkseed if non-null
+      if (! is.null(chunkseed)) {
+        chunkseed <<- nextRNGSubStream(chunkseed)
+      }
     }
     finishnode(sprof)
     numtasks

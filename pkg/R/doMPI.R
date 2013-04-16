@@ -37,6 +37,25 @@ makeDotsEnv <- function(...) {
   function() NULL
 }
 
+convseed <- function(iseed) {
+  saveseed <- if (exists('.Random.seed', where=.GlobalEnv, inherits=FALSE))
+    get('.Random.seed', pos=.GlobalEnv, inherits=FALSE)
+
+  saverng <- RNGkind("L'Ecuyer-CMRG")
+
+  tryCatch({
+    set.seed(iseed)
+    get('.Random.seed', pos=.GlobalEnv, inherits=FALSE)
+  },
+  finally={
+    RNGkind(saverng[1], saverng[2])
+    if (is.null(saveseed))
+      rm('.Random.seed', pos=.GlobalEnv)
+    else
+      assign('.Random.seed', saveseed, pos=.GlobalEnv)
+  })
+}
+
 doMPI <- function(obj, expr, envir, data) {
   cl <- data
 
@@ -53,6 +72,7 @@ doMPI <- function(obj, expr, envir, data) {
   bcastThreshold <- 800  # XXX not sure of a good default value
   forcePiggyback <- FALSE
   nocompile <- FALSE
+  seed <- NULL
 
   if (!inherits(obj, 'foreach'))
     stop('obj must be a foreach object')
@@ -68,7 +88,7 @@ doMPI <- function(obj, expr, envir, data) {
                         'initEnvirMaster', 'initArgsMaster',
                         'finalEnvir', 'finalArgs',
                         'profile', 'bcastThreshold', 'forcePiggyback',
-                        'nocompile')
+                        'nocompile', 'seed')
     if (any(!recog))
       warning(sprintf('ignoring unrecognized mpi option(s): %s',
                       paste(nms[!recog], collapse=', ')), call.=FALSE)
@@ -208,6 +228,16 @@ doMPI <- function(obj, expr, envir, data) {
         nocompile <- options$nocompile
       }
     }
+
+    if (!is.null(options$seed)) {
+      if (!is.numeric(options$seed) || length(options$seed) != 1) {
+        warning('seed must be a numeric value', call.=FALSE)
+      } else {
+        if (obj$verbose)
+          cat(sprintf('setting seed option to %s\n', options$seed))
+        seed <- convseed(options$seed)
+      }
+    }
   }
 
   # setup the parent environment by first attempting to create an environment
@@ -270,7 +300,8 @@ doMPI <- function(obj, expr, envir, data) {
   # execute the tasks
   master(cl, xpr, it, exportenv, obj$packages, obj$verbose, chunkSize, info,
          initEnvir, initArgs, initEnvirMaster, initArgsMaster,
-         finalEnvir, finalArgs, profile, bcastThreshold, forcePiggyback)
+         finalEnvir, finalArgs, profile, bcastThreshold, forcePiggyback,
+         seed)
 
   # check for errors
   errorValue <- getErrorValue(it)

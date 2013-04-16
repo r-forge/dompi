@@ -67,7 +67,7 @@ dompiWorkerLoop <- function(cl, cores=1, verbose=FALSE) {
       break
     }
 
-    # check if this is an PRNG job
+    # check if this is a PRNG job issued by setRngDoMPI
     if (!is.null(taskchunk$seed)) {
       logger('got a PRNG job')
       if (injob) {
@@ -78,7 +78,7 @@ dompiWorkerLoop <- function(cl, cores=1, verbose=FALSE) {
       }
 
       RNGkind("L'Ecuyer-CMRG")
-      assign('.Random.seed', taskchunk$seed, envir=globalenv())
+      assign('.Random.seed', taskchunk$seed, pos=globalenv())
       next
     }
 
@@ -108,6 +108,12 @@ dompiWorkerLoop <- function(cl, cores=1, verbose=FALSE) {
       # perform initialization for new job
       logger('initializing for new job %d', jid)
       err <- jobInitialize(envir)
+
+      # set RNG to "L'Ecuyer-CMRG" if "chunkseed" is set
+      if (! is.null(taskchunk$chunkseed)) {
+        logger("setting RNG to L'Ecuyer-CMRG for this job")
+        RNGkind("L'Ecuyer-CMRG")
+      }
     }
 
     # check if there are tasks to execute
@@ -116,6 +122,12 @@ dompiWorkerLoop <- function(cl, cores=1, verbose=FALSE) {
       # assert envir is not NULL
       # sanity check the taskchunk now that any new job has been setup
       checkTask(taskchunk, jid)
+
+      if (! is.null(taskchunk$chunkseed)) {
+        logger('setting .Random.seed for a taskchunk: %s',
+               paste(taskchunk$chunkseed, collapse=', '))
+        assign('.Random.seed', taskchunk$chunkseed, pos=globalenv())
+      }
 
       resultchunk <- NULL
       tryCatch({
