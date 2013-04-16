@@ -17,28 +17,28 @@ registerDoMPI(cl)
 trials <- 4
 w <- clusterSize(cl)
 
-cat("Default chunkSize\n")
-fun <- function(ignore) {
-  foreach(sleep=irunif(1, max=5, count=4*w),
+cat("Using default chunkSize of 1\n")
+fun <- function(trial, comm) {
+  foreach(sleep=irunif(1, max=5, count=5*w),
           .combine='rbind',
           .options.mpi=list(seed=42)) %dopar% {
     Sys.sleep(sleep)  # Randomize task length
-    data.frame(rank=mpi.comm.rank(0), result=as.integer(runif(1, max=1000)))
+    data.frame(rank=mpi.comm.rank(comm), result=as.integer(runif(1, max=1000)))
   }
 }
-r <- lapply(1:trials, fun)
+r <- lapply(1:trials, fun, cl$comm)
 print(do.call('cbind', r))
 
-cat("chunkSize is 3\n")
-fun <- function(ignore) {
-  foreach(sleep=irunif(1, max=5, count=4*w),
+cat("Using chunkSize of 2\n")
+fun <- function(trial, comm) {
+  foreach(sleep=irunif(1, max=5, count=5*w),
           .combine='rbind',
-          .options.mpi=list(chunkSize=3, seed=42)) %dopar% {
+          .options.mpi=list(seed=42, chunkSize=2)) %dopar% {
     Sys.sleep(sleep)  # Randomize task length
-    data.frame(rank=mpi.comm.rank(0), result=as.integer(runif(1, max=1000)))
+    data.frame(rank=mpi.comm.rank(comm), result=as.integer(runif(1, max=1000)))
   }
 }
-r <- lapply(1:trials, fun)
+r <- lapply(1:trials, fun, cl$comm)
 print(do.call('cbind', r))
 
 # Shutdown the cluster and quit

@@ -15,17 +15,17 @@ trials <- 4
 w <- clusterSize(cl)
 
 cat(sprintf("Only first %d results are guaranteed repeatable\n", w))
-fun <- function(ignore) {
+fun <- function(trial, comm) {
   # Initialize parallel RNG
   setRngDoMPI(cl, seed=42)
 
-  foreach(sleep=irunif(1, max=5, count=4*w),
+  foreach(sleep=irunif(1, max=5, count=5*w),
           .combine='rbind') %dopar% {
     Sys.sleep(sleep)  # Randomize task length
-    data.frame(rank=mpi.comm.rank(0), result=as.integer(runif(1, max=1000)))
+    data.frame(rank=mpi.comm.rank(comm), result=as.integer(runif(1, max=1000)))
   }
 }
-r <- lapply(1:trials, fun)
+r <- lapply(1:trials, fun, cl$comm)
 print(do.call('cbind', r))
 
 # Shutdown the cluster and quit
