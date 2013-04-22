@@ -119,7 +119,13 @@ master <- function(cl, expr, it, envir, packages, verbose, chunkSize, info,
     tid <- resultchunk$tid
 
     for (i in seq(length=resultchunk$numtasks)) {
-      accumulate(it, resultchunk$resultslist[[i]], tid)
+      tryCatch({
+        accumulate(it, resultchunk$resultslist[[i]], tid)
+      },
+      error=function(e) {
+        cat(sprintf('error thrown by combine function: %s\n',
+                    conditionMessage(e)))
+      })
       tid <- tid + 1
     }
     finishnode(sprof)
