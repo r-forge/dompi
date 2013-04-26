@@ -281,17 +281,8 @@ doMPI <- function(obj, expr, envir, data) {
     for (sym in export) {
       if (!exists(sym, envir, inherits=TRUE))
         stop(sprintf('unable to find variable "%s"', sym))
-      obj <- get(sym, envir, inherits=TRUE)
-
-      # change the environment of .GlobalEnv functions to exportenv
-      # so it has access to all exported variables.
-      # that's arguably bad because it has access to some variables
-      # that it normally wouldn't, but otherwise it won't have access
-      # to other exported .GlobalEnv functions.
-      if (is.function(obj) && identical(environment(obj), .GlobalEnv))
-        environment(obj) <- exportenv
-
-      assign(sym, obj, pos=exportenv, inherits=FALSE)
+      assign(sym, get(sym, envir, inherits=TRUE),
+          pos=exportenv, inherits=FALSE)
     }
   }
 

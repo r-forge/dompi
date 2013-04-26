@@ -50,7 +50,7 @@ dompiWorkerLoop <- function(cl, cores=1, verbose=FALSE) {
   jid <- -999
   err <- NULL
   envir <- NULL
-  genvir <- new.env(parent=globalenv())
+  wenvir <- new.env(parent=globalenv())
 
   # loop over jobs, which correspond to calls to foreach
   repeat {
@@ -103,23 +103,28 @@ dompiWorkerLoop <- function(cl, cores=1, verbose=FALSE) {
       }
 
       if (!is.null(taskchunk$globaljob) && taskchunk$globaljob) {
-        logger('setting values in the pseudo-global environment')
+        logger('setting values in the worker environment')
         injob <- FALSE
         for (nm in ls(envir, all.names=TRUE)) {
           obj <- get(nm, pos=envir, inherits=FALSE)
-          if (is.function(obj)) {
-            logger('got function from environment: %s',
-                   environmentName(environment(obj)))
-            if (identical(environment(obj), .GlobalEnv)) {
-              environment(obj) <- genvir
-            }
+          if (is.function(obj) && identical(environment(obj), .GlobalEnv)) {
+            environment(obj) <- wenvir
           }
-          assign(nm, obj, pos=genvir)
+          assign(nm, obj, pos=wenvir)
         }
       } else {
         injob <- TRUE  # if we weren't in a job before, we are now
 
         # fix the parent environment of the execution environment
+        genvir <- new.env(parent=wenvir)
+        for (nm in ls(envir, all.names=TRUE)) {
+          obj <- get(nm, pos=envir, inherits=FALSE)
+          if (is.function(obj) && identical(environment(obj), .GlobalEnv)) {
+            rm(list=nm, pos=envir)
+            environment(obj) <- genvir
+            assign(nm, obj, pos=genvir)
+          }
+        }
         parent.env(envir) <- genvir
 
         # get the job id from envir to sanity check tasks
