@@ -1,6 +1,6 @@
 export(registerDoMPI, startMPIcluster, clusterSize, closeCluster,
     dompiWorkerLoop, openMPIcluster, sinkWorkerOutput, getDoMpiCluster,
-    setRngDoMPI)
+    setRngDoMPI, exportDoMPI)
 S3method(clusterSize, mpicluster)
 S3method(closeCluster, mpicluster)
 import(foreach)

@@ -41,26 +41,6 @@ mklogger <- function(verbose, out=stdout()) {
 }
 
 # toplevel worker function
-#
-# Note that this function calls the "attach" function as part of a
-# strategy for exporting variables and functions from the user's program
-# to the cluster workers.  It uses the distinctive name "dompiExports"
-# when attaching it to the search path, as recommended.  Each time a new
-# "job" is executed (where a "job" roughly corresponds to a foreach
-# loop), the corresponding user variables are attached, and they are
-# detached when that job finishes.  This process may happen many times
-# during the execution of the "dompiWorkerLoop" function, but it will be
-# detached by the time it eventually returns.  In that sense, this
-# function follows "Good practice" as described on the "attach" man page
-# even though it doesn't call "detach" via "on.exit", which isn't really
-# appropriate in this case.
-#
-# Also note that the situation is turned around from normal, in that
-# the user never calls "dompiWorkerLoop": it is dompiWorkerLoop that
-# calls functions that are sent to it by the user.  dompiWorkerLoop
-# only returns when the corresponding cluster object is shutdown, and
-# at that point, the R session exits.
-#
 dompiWorkerLoop <- function(cl, cores=1, verbose=FALSE) {
   logger <- mklogger(verbose)
   logger('starting worker loop: cores = %d', cores)
@@ -70,6 +50,7 @@ dompiWorkerLoop <- function(cl, cores=1, verbose=FALSE) {
   jid <- -999
   err <- NULL
   envir <- NULL
+  genvir <- new.env(parent=globalenv())
 
   # loop over jobs, which correspond to calls to foreach
   repeat {
@@ -110,7 +91,6 @@ dompiWorkerLoop <- function(cl, cores=1, verbose=FALSE) {
         jobCleanup(envir)
         envir <- NULL
       }
-      injob <- TRUE  # if we weren't in a job before, we are now
 
       # receive the job environment from the master if necessary
       envir <- if (taskchunk$joblen > 0) {
@@ -122,17 +102,38 @@ dompiWorkerLoop <- function(cl, cores=1, verbose=FALSE) {
         taskchunk$job
       }
 
-      # get the job id from envir to sanity check tasks
-      jid <- get('.$jid', envir)
+      if (!is.null(taskchunk$globaljob) && taskchunk$globaljob) {
+        logger('setting values in the pseudo-global environment')
+        injob <- FALSE
+        for (nm in ls(envir, all.names=TRUE)) {
+          obj <- get(nm, pos=envir, inherits=FALSE)
+          if (is.function(obj)) {
+            logger('got function from environment: %s',
+                   environmentName(environment(obj)))
+            if (identical(environment(obj), .GlobalEnv)) {
+              environment(obj) <- genvir
+            }
+          }
+          assign(nm, obj, pos=genvir)
+        }
+      } else {
+        injob <- TRUE  # if we weren't in a job before, we are now
 
-      # perform initialization for new job
-      logger('initializing for new job %d', jid)
-      err <- jobInitialize(envir)
+        # fix the parent environment of the execution environment
+        parent.env(envir) <- genvir
 
-      # set RNG to "L'Ecuyer-CMRG" if "chunkseed" is set
-      if (! is.null(taskchunk$chunkseed)) {
-        logger("setting RNG to L'Ecuyer-CMRG for this job")
-        RNGkind("L'Ecuyer-CMRG")
+        # get the job id from envir to sanity check tasks
+        jid <- get('.$jid', envir)
+
+        # perform initialization for new job
+        logger('initializing for new job %d', jid)
+        err <- jobInitialize(envir)
+
+        # set RNG to "L'Ecuyer-CMRG" if "chunkseed" is set
+        if (! is.null(taskchunk$chunkseed)) {
+          logger("setting RNG to L'Ecuyer-CMRG for this job")
+          RNGkind("L'Ecuyer-CMRG")
+        }
       }
     }
 
@@ -217,13 +218,6 @@ jobInitialize <- function(envir) {
       require(pkg, quietly=TRUE, character.only=TRUE)
     }
 
-    # fix the parent environment of the execution environment
-    parent.env(envir) <- globalenv()
-
-    # This isn't always necessary, but is useful when exported
-    # functions call exported functions
-    attach(envir, name='dompiExports')
-
     # execute the "initEnvir" function if specified
     ienv <- get('.$initEnvir', pos=envir)
     if (!is.null(ienv)) {
@@ -287,7 +281,6 @@ jobCleanup <- function(envir) {
         signalCondition(e)
       })
     }
-    detach(name='dompiExports')
   },
   error=function(e) {
     cat(sprintf('error executing finalEnvir: %s\n', conditionMessage(e)))
