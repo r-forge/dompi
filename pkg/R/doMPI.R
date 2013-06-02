@@ -281,8 +281,13 @@ doMPI <- function(obj, expr, envir, data) {
     for (sym in export) {
       if (!exists(sym, envir, inherits=TRUE))
         stop(sprintf('unable to find variable "%s"', sym))
-      assign(sym, get(sym, envir, inherits=TRUE),
-          pos=exportenv, inherits=FALSE)
+      val <- get(sym, envir, inherits=TRUE)
+      if (is.function(val) &&
+          (identical(environment(val), .GlobalEnv) ||
+           identical(environment(val), envir))) {
+        environment(val) <- exportenv
+      }
+      assign(sym, val, pos=exportenv, inherits=FALSE)
     }
   }
 

@@ -115,17 +115,7 @@ dompiWorkerLoop <- function(cl, cores=1, verbose=FALSE) {
       } else {
         injob <- TRUE  # if we weren't in a job before, we are now
 
-        # fix the parent environment of the execution environment
-        genvir <- new.env(parent=wenvir)
-        for (nm in ls(envir, all.names=TRUE)) {
-          obj <- get(nm, pos=envir, inherits=FALSE)
-          if (is.function(obj) && identical(environment(obj), .GlobalEnv)) {
-            rm(list=nm, pos=envir)
-            environment(obj) <- genvir
-            assign(nm, obj, pos=genvir)
-          }
-        }
-        parent.env(envir) <- genvir
+        parent.env(envir) <- wenvir
 
         # get the job id from envir to sanity check tasks
         jid <- get('.$jid', envir)
