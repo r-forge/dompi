@@ -1,8 +1,8 @@
 NEWS/ChangeLog for doMPI
 ------------------------
 
-0.2.1	2013-X-XX
-    o	nothing yet
+0.2.1	2014-11-25
+    o	fixed "R CMD check" warnings reported by Kurt Hornik
 
 0.2	2013-6-13
     o	require R 2.14.0 or newer
