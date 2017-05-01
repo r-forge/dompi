@@ -2,7 +2,7 @@ Package: doMPI
 Type: Package
 Title: Foreach Parallel Adaptor for the Rmpi Package
 Version: 0.2.2
-Authors@R: person("Steve", "Weston", role=c("cre", "aut", "cph"),
+Authors@R: person("Stephen", "Weston", role=c("cre", "aut", "cph"),
                   email="stephen.b.weston@gmail.com")
 Description: Provides a parallel backend for the %dopar% function using
         the Rmpi package.
