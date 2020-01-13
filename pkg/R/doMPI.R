@@ -269,6 +269,11 @@ doMPI <- function(obj, expr, envir, data) {
       cat('no variables are automatically exported\n')
     }
   }
+  # packageName function added in R 3.0.0
+  parentPackage <- if (exists('packageName', mode='function'))
+     packageName(envir)
+   else
+     NULL
 
   # compute list of variables to export
   export <- unique(obj$export)
@@ -310,7 +315,7 @@ doMPI <- function(obj, expr, envir, data) {
     compile(expr, env=envir, options=list(suppressUndefined=TRUE))
 
   # execute the tasks
-  master(cl, xpr, it, exportenv, obj$packages, obj$verbose, chunkSize, info,
+  master(cl, xpr, it, exportenv, parentPackage, obj$packages, obj$verbose, chunkSize, info,
          initEnvir, initArgs, initEnvirMaster, initArgsMaster,
          finalEnvir, finalArgs, profile, bcastThreshold, forcePiggyback,
          seed)

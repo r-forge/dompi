@@ -116,6 +116,11 @@ dompiWorkerLoop <- function(cl, cores=1, verbose=FALSE) {
         injob <- TRUE  # if we weren't in a job before, we are now
 
         parent.env(envir) <- wenvir
+        # set parent package environment if required
+        parentPackage <- get('.$parentPackage', envir)
+        if(!is.null(parentPackage)) {
+          parent.env(wenvir) <- asNamespace(parentPackage)
+        }
 
         # get the job id from envir to sanity check tasks
         jid <- get('.$jid', envir)

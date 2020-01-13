@@ -20,6 +20,7 @@
 #
 #   job            an environment with the following elements:
 #     .$expr
+#     .$parentPackage
 #     .$packages
 #     .$initEnvir
 #     .$initArgs
@@ -45,7 +46,7 @@
 #   (should there be an error indicator?)
 #
 
-master <- function(cl, expr, it, envir, packages, verbose, chunkSize, info,
+master <- function(cl, expr, it, envir, parentPackage, packages, verbose, chunkSize, info,
                    initEnvir, initArgs, initEnvirMaster, initArgsMaster,
                    finalEnvir, finalArgs, profile, bcastThreshold,
                    forcePiggyback, chunkseed) {
@@ -66,6 +67,7 @@ master <- function(cl, expr, it, envir, packages, verbose, chunkSize, info,
   # put extra data into execution environmment to be sent to cluster
   assign('.$expr', expr, pos=envir)
   assign('.$packages', packages, pos=envir)
+  assign('.$parentPackage', parentPackage, pos=envir)
   assign('.$initEnvir', initEnvir, pos=envir)
   assign('.$initArgs', initArgs, pos=envir)
   assign('.$finalEnvir', finalEnvir, pos=envir)
