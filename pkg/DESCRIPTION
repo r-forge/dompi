@@ -1,13 +1,13 @@
 Package: doMPI
 Type: Package
-Title: Foreach Parallel Adaptor for the Rmpi Package
+Title: 'Foreach' Parallel Adaptor for the 'Rmpi' Package
 Version: 0.2.3
-Authors@R: c(person("Steve", "Weston", role=c("cre", "aut", "cph"),
+Authors@R: c(person("Steve", "Weston", role=c("aut", "cph"),
                   email="stephen.b.weston@gmail.com"),
-             person("B. W.", "Lewis", role=c("ctb"),
-                  email="blewis@illposed.net")))
-Description: Provides a parallel backend for the %dopar% function using
-        the Rmpi package.
+             person("B. W.", "Lewis", role=c("cre", "ctb"),
+                  email="blewis@illposed.net"))
+Description: Provides a parallel backend for the 'foreach' package using
+        the 'Rmpi' package.
 Depends: R (>= 3.0.0), foreach(>= 1.3.0), iterators(>= 1.0.0), Rmpi(>= 0.5-7)
 Imports: parallel, compiler, utils
 Suggests: randomForest, itertools
